@@ -1,0 +1,20 @@
+type: object
+description: 사용자 부분 수정 요청 (모든 필드 선택적)
+properties:
+  name:
+    type: string
+    description: 사용자 이름
+    example: 이영희
+    minLength: 1
+  email:
+    type: string
+    description: 이메일 주소
+    format: email
+    example: lee@example.com
+  age:
+    type: integer
+    description: 나이
+    format: int32
+    minimum: 0
+    maximum: 150
+    example: 28

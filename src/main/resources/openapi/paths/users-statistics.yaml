@@ -1,0 +1,18 @@
+get:
+  tags:
+    - users
+  summary: 사용자 통계 조회
+  description: |
+    전체 사용자에 대한 통계 정보를 조회합니다.
+    - 전체 사용자 수
+    - 성인 사용자 수
+    - 평균 나이
+    - 최소/최대 나이
+  operationId: getUserStatistics
+  responses:
+    '200':
+      description: 통계 조회 성공
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/responses/UserStatistics.yaml'

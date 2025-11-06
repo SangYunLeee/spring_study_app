@@ -1,0 +1,85 @@
+openapi: 3.0.1
+
+info:
+  title: 사용자 관리 API
+  description: |
+    # 명세 우선 개발 (Spec-First Development)
+
+    이 명세는 **모듈화된 구조**로 관리됩니다.
+    - `paths/` : API 경로별로 파일 분리
+    - `schemas/` : 요청/응답 스키마별로 파일 분리
+
+    ## 주요 기능
+    - 사용자 CRUD (생성, 조회, 수정, 삭제)
+    - 검색 및 필터링
+    - 통계
+
+    ## 장점
+    - ✅ 가독성: 각 파일이 짧고 집중적
+    - ✅ 재사용: 스키마를 여러 곳에서 참조
+    - ✅ 협업: 여러 개발자가 다른 파일 수정 가능
+    - ✅ 유지보수: 스키마 변경 시 한 곳만 수정
+  version: 1.0.0
+  contact:
+    name: 학습자
+    email: learner@example.com
+  license:
+    name: MIT License
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8080
+    description: 로컬 개발 서버
+
+tags:
+  - name: users
+    description: 사용자 관리 API
+
+paths:
+  # ===== 사용자 CRUD =====
+
+  # POST /api/users, GET /api/users
+  /api/users:
+    $ref: 'paths/users.yaml'
+
+  # GET/PUT/PATCH/DELETE /api/users/{id}
+  /api/users/{id}:
+    $ref: 'paths/users-by-id.yaml'
+
+  # ===== 검색 및 필터링 =====
+
+  # GET /api/users/search?keyword=xxx
+  /api/users/search:
+    $ref: 'paths/users-search.yaml'
+
+  # GET /api/users/adults
+  /api/users/adults:
+    $ref: 'paths/users-adults.yaml'
+
+  # ===== 통계 =====
+
+  # GET /api/users/statistics
+  /api/users/statistics:
+    $ref: 'paths/users-statistics.yaml'
+
+components:
+  schemas:
+    # ===== 요청 스키마 =====
+    CreateUserRequest:
+      $ref: 'schemas/requests/CreateUserRequest.yaml'
+
+    UpdateUserRequest:
+      $ref: 'schemas/requests/UpdateUserRequest.yaml'
+
+    PatchUserRequest:
+      $ref: 'schemas/requests/PatchUserRequest.yaml'
+
+    # ===== 응답 스키마 =====
+    UserResponse:
+      $ref: 'schemas/responses/UserResponse.yaml'
+
+    UserStatistics:
+      $ref: 'schemas/responses/UserStatistics.yaml'
+
+    ErrorResponse:
+      $ref: 'schemas/responses/ErrorResponse.yaml'

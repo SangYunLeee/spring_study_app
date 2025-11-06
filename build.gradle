@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.2.0'
     id 'io.spring.dependency-management' version '1.1.4'
+    id 'org.openapi.generator' version '7.2.0'
 }
 
 group = 'com.example'
@@ -19,10 +20,49 @@ dependencies {
     // Spring Boot Web - 웹 애플리케이션 개발을 위한 기본 라이브러리
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
+    // OpenAPI (Swagger) - API 명세 자동 생성
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
+
+    // OpenAPI Generator 필수 라이브러리
+    implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
+    implementation 'io.swagger.core.v3:swagger-annotations:2.2.20'
+    compileOnly 'jakarta.validation:jakarta.validation-api:3.0.2'
+    compileOnly 'jakarta.annotation:jakarta.annotation-api:2.1.1'
+
     // 테스트를 위한 라이브러리
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+// OpenAPI 명세에서 코드 생성
+tasks.register('generateApi', org.openapitools.generator.gradle.plugin.tasks.GenerateTask) {
+    generatorName = 'spring'
+    inputSpec = "$rootDir/src/main/resources/openapi/api-spec.yaml"
+    outputDir = "$buildDir/generated"
+    apiPackage = 'com.example.springbasic.api'
+    modelPackage = 'com.example.springbasic.api.model'
+    configOptions = [
+            dateLibrary: 'java8',
+            interfaceOnly: 'true',
+            useTags: 'true',
+            useSpringBoot3: 'true',
+            documentationProvider: 'none'
+    ]
+}
+
+// 생성된 코드를 소스 경로에 추가
+sourceSets {
+    main {
+        java {
+            srcDir "$buildDir/generated/src/main/java"
+        }
+    }
+}
+
+// 컴파일 전에 코드 생성 실행
+tasks.named('compileJava') {
+    dependsOn tasks.named('generateApi')
 }

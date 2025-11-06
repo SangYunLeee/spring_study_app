@@ -1,0 +1,34 @@
+type: object
+description: 사용자 통계 정보
+required:
+  - totalCount
+  - adultCount
+  - averageAge
+  - minAge
+  - maxAge
+properties:
+  totalCount:
+    type: integer
+    description: 전체 사용자 수
+    format: int64
+    example: 10
+  adultCount:
+    type: integer
+    description: 성인 사용자 수
+    format: int64
+    example: 7
+  averageAge:
+    type: number
+    description: 평균 나이
+    format: double
+    example: 28.5
+  minAge:
+    type: integer
+    description: 최소 나이
+    format: int32
+    example: 17
+  maxAge:
+    type: integer
+    description: 최대 나이
+    format: int32
+    example: 45

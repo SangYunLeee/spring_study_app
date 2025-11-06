@@ -1,0 +1,56 @@
+post:
+  tags:
+    - users
+  summary: 사용자 생성
+  description: |
+    새로운 사용자를 생성합니다.
+
+    **제약사항:**
+    - 이메일은 중복될 수 없습니다
+    - 나이는 0 이상이어야 합니다
+  operationId: createUser
+  requestBody:
+    description: 생성할 사용자 정보
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../schemas/requests/CreateUserRequest.yaml'
+        examples:
+          example1:
+            summary: 일반 사용자 생성
+            value:
+              name: 홍길동
+              email: hong@example.com
+              age: 25
+  responses:
+    '201':
+      description: 사용자 생성 성공
+      headers:
+        Location:
+          description: 생성된 리소스 URI
+          schema:
+            type: string
+            example: /api/users/1
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/responses/UserResponse.yaml'
+    '400':
+      description: 잘못된 요청 (중복 이메일, 유효성 검증 실패 등)
+
+get:
+  tags:
+    - users
+  summary: 전체 사용자 조회
+  description: 시스템에 등록된 모든 사용자를 조회합니다.
+  operationId: getAllUsers
+  responses:
+    '200':
+      description: 조회 성공
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '../schemas/responses/UserResponse.yaml'

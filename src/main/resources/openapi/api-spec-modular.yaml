@@ -1,0 +1,83 @@
+openapi: 3.0.1
+info:
+  title: 사용자 관리 API (모듈화 버전)
+  description: |
+    # 명세 우선 개발 (Spec-First Development)
+
+    이 명세는 여러 파일로 분리되어 관리됩니다.
+    - paths/ : API 경로별로 분리
+    - schemas/ : 스키마별로 분리
+
+    ## 주요 기능
+    - 사용자 CRUD (생성, 조회, 수정, 삭제)
+    - 검색 및 필터링
+    - 통계
+  version: 1.0.0
+  contact:
+    name: 학습자
+    email: learner@example.com
+  license:
+    name: MIT License
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8080
+    description: 로컬 개발 서버
+
+tags:
+  - name: users
+    description: 사용자 관리 API
+
+paths:
+  # 외부 파일 참조!
+  /api/users:
+    $ref: 'paths/users.yaml'
+
+  /api/users/{id}:
+    get:
+      tags:
+        - users
+      summary: ID로 사용자 조회
+      operationId: getUserById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: 'schemas/responses/UserResponse.yaml'
+        '404':
+          description: 사용자를 찾을 수 없음
+
+    delete:
+      tags:
+        - users
+      summary: 사용자 삭제
+      operationId: deleteUser
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: 삭제 성공
+        '404':
+          description: 사용자를 찾을 수 없음
+
+# components도 외부 참조 가능!
+components:
+  schemas:
+    CreateUserRequest:
+      $ref: 'schemas/requests/CreateUserRequest.yaml'
+    UserResponse:
+      $ref: 'schemas/responses/UserResponse.yaml'

@@ -1,0 +1,23 @@
+get:
+  tags:
+    - users
+  summary: 이름으로 사용자 검색
+  description: 이름에 특정 키워드가 포함된 사용자를 검색합니다.
+  operationId: searchUsers
+  parameters:
+    - name: keyword
+      in: query
+      description: 검색 키워드
+      required: true
+      schema:
+        type: string
+        example: 홍
+  responses:
+    '200':
+      description: 검색 성공
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '../schemas/responses/UserResponse.yaml'

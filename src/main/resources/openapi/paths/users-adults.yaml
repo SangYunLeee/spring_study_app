@@ -1,0 +1,15 @@
+get:
+  tags:
+    - users
+  summary: 성인 사용자만 조회
+  description: 나이가 19세 이상인 사용자만 조회합니다.
+  operationId: getAdultUsers
+  responses:
+    '200':
+      description: 조회 성공
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '../schemas/responses/UserResponse.yaml'

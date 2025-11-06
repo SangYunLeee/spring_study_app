@@ -1,0 +1,11 @@
+type: object
+description: 에러 응답
+properties:
+  message:
+    type: string
+    description: 에러 메시지
+    example: User not found
+  timestamp:
+    type: string
+    description: 에러 발생 시각
+    format: date-time

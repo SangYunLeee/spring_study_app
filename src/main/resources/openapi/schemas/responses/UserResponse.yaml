@@ -1,0 +1,26 @@
+type: object
+description: 사용자 응답 (조회, 생성, 수정 시 반환)
+required:
+  - id
+  - name
+  - email
+  - age
+properties:
+  id:
+    type: integer
+    description: 사용자 고유 ID
+    format: int64
+    example: 1
+  name:
+    type: string
+    description: 사용자 이름
+    example: 홍길동
+  email:
+    type: string
+    description: 이메일 주소
+    example: hong@example.com
+  age:
+    type: integer
+    description: 나이
+    format: int32
+    example: 25
