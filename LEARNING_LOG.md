@@ -330,6 +330,266 @@ src/main/java/com/example/springbasic/
 
 ---
 
+### 세션 3: RESTful API와 HTTP 메서드 (2025-11-06)
+
+#### 학습 목표
+- POST, PUT, PATCH, DELETE 메서드 마스터
+- @RequestBody로 JSON 데이터 받기
+- DTO (Data Transfer Object) 패턴 이해
+- 완전한 RESTful API 구현
+
+#### 완료한 작업
+
+1. **RESTful API 개념 문서 작성**
+   - 파일: [RESTFUL_API.md](RESTFUL_API.md)
+   - HTTP 메서드별 용도 정리
+   - RESTful URI 설계 원칙
+   - HTTP 상태 코드 사용법
+
+2. **Request/Response DTO 구현**
+   - [CreateUserRequest.java](src/main/java/com/example/springbasic/dto/CreateUserRequest.java) - POST 요청용
+   - [UpdateUserRequest.java](src/main/java/com/example/springbasic/dto/UpdateUserRequest.java) - PUT 요청용
+   - [PatchUserRequest.java](src/main/java/com/example/springbasic/dto/PatchUserRequest.java) - PATCH 요청용
+   - [UserResponse.java](src/main/java/com/example/springbasic/dto/UserResponse.java) - 응답용
+
+3. **UserService 개선**
+   - `patchUser()` 메서드 추가 (부분 수정 로직)
+   - null 체크를 통한 선택적 필드 업데이트
+
+4. **UserController 완전 RESTful하게 재구현**
+   - 파일: [UserController.java](src/main/java/com/example/springbasic/controller/UserController.java)
+   - ✅ POST `/api/users` - 사용자 생성 (201 Created)
+   - ✅ GET `/api/users` - 전체 조회 (200 OK)
+   - ✅ GET `/api/users/{id}` - ID로 조회 (200, 404)
+   - ✅ GET `/api/users/search?keyword=xxx` - 검색
+   - ✅ PUT `/api/users/{id}` - 전체 수정 (200)
+   - ✅ PATCH `/api/users/{id}` - 부분 수정 (200)
+   - ✅ DELETE `/api/users/{id}` - 삭제 (204 No Content)
+
+5. **API 테스트 가이드 작성**
+   - 파일: [API_TEST_GUIDE.md](API_TEST_GUIDE.md)
+   - 모든 엔드포인트 테스트 방법
+   - curl 명령어 예제
+   - 실전 테스트 시나리오
+
+#### 학습한 핵심 개념
+
+##### 1. HTTP 메서드와 CRUD 매핑
+
+| HTTP 메서드 | CRUD | 용도 | 멱등성 | 응답 코드 |
+|------------|------|------|--------|----------|
+| POST | Create | 생성 | ❌ | 201 Created |
+| GET | Read | 조회 | ✅ | 200 OK |
+| PUT | Update | 전체 수정 | ✅ | 200 OK |
+| PATCH | Update | 부분 수정 | ❌ | 200 OK |
+| DELETE | Delete | 삭제 | ✅ | 204 No Content |
+
+**멱등성 (Idempotent)**: 같은 요청을 여러 번 해도 결과가 같음
+
+##### 2. @RequestBody - JSON을 Java 객체로 변환
+
+```java
+@PostMapping
+public ResponseEntity<UserResponse> createUser(@RequestBody CreateUserRequest request) {
+    // JSON → CreateUserRequest 객체로 자동 변환
+    User user = userService.createUser(
+        request.name(),
+        request.email(),
+        request.age()
+    );
+    return ResponseEntity.created(...).body(response);
+}
+```
+
+##### 3. DTO (Data Transfer Object) 패턴
+
+**왜 DTO를 사용하나요?**
+1. Entity 직접 노출 방지 (보안)
+2. 필요한 필드만 정의
+3. API 변경 시 Entity 영향 최소화
+
+```java
+// 요청 DTO - ID 없음 (서버에서 생성)
+public record CreateUserRequest(
+    String name,
+    String email,
+    int age
+) {}
+
+// 응답 DTO - 민감한 정보 제외
+public record UserResponse(
+    Long id,
+    String name,
+    String email,
+    int age
+) {
+    public static UserResponse from(User user) {
+        return new UserResponse(user.id(), user.name(), ...);
+    }
+}
+```
+
+##### 4. PUT vs PATCH 차이
+
+**PUT - 전체 수정**
+- 모든 필드 필수
+- 리소스 전체를 교체
+- 멱등성 보장
+
+```java
+@PutMapping("/{id}")
+public ResponseEntity<UserResponse> updateUser(
+    @PathVariable Long id,
+    @RequestBody UpdateUserRequest request  // 모든 필드 필요
+) { ... }
+```
+
+**PATCH - 부분 수정**
+- 변경할 필드만 제공
+- null이 아닌 필드만 업데이트
+
+```java
+@PatchMapping("/{id}")
+public ResponseEntity<UserResponse> patchUser(
+    @PathVariable Long id,
+    @RequestBody PatchUserRequest request  // 선택적 필드
+) {
+    // null 체크를 통한 부분 업데이트
+    String newName = request.name() != null ? request.name() : existing.name();
+    ...
+}
+```
+
+##### 5. HTTP 상태 코드 적절하게 사용
+
+```java
+// 201 Created + Location 헤더
+return ResponseEntity
+    .created(URI.create("/api/users/" + user.id()))
+    .body(response);
+
+// 204 No Content (삭제 성공)
+return ResponseEntity.noContent().build();
+
+// 404 Not Found
+return ResponseEntity.notFound().build();
+
+// 400 Bad Request
+return ResponseEntity.badRequest().build();
+```
+
+##### 6. RESTful URI 설계 원칙
+
+```
+✅ 좋은 예:
+GET    /api/users           # 전체 조회
+POST   /api/users           # 생성
+GET    /api/users/1         # 조회
+PUT    /api/users/1         # 수정
+DELETE /api/users/1         # 삭제
+
+❌ 나쁜 예:
+GET  /api/getUsers          # 동사 사용 금지
+POST /api/createUser        # 동사 사용 금지
+GET  /api/users/delete/1    # DELETE 메서드 사용해야 함
+```
+
+#### 테스트 결과
+
+**POST - 사용자 생성**
+```bash
+curl -X POST http://localhost:8080/api/users \
+  -H "Content-Type: application/json" \
+  -d '{"name":"홍길동","email":"hong@example.com","age":25}'
+```
+→ 201 Created, Location 헤더 포함 ✅
+
+**GET - 전체 조회**
+```bash
+curl http://localhost:8080/api/users
+```
+→ 200 OK, 배열 반환 ✅
+
+**PUT - 전체 수정**
+```bash
+curl -X PUT http://localhost:8080/api/users/2 \
+  -H "Content-Type: application/json" \
+  -d '{"name":"김철수_수정","email":"kim2@example.com","age":31}'
+```
+→ 200 OK, 수정된 데이터 반환 ✅
+
+**PATCH - 부분 수정** (나이만 변경)
+```bash
+curl -X PATCH http://localhost:8080/api/users/1 \
+  -H "Content-Type: application/json" \
+  -d '{"age":26}'
+```
+→ 200 OK, 나이만 변경됨 ✅
+
+**DELETE - 삭제**
+```bash
+curl -X DELETE http://localhost:8080/api/users/3
+```
+→ 204 No Content ✅
+
+#### 프로젝트 구조 변화
+
+```
+src/main/java/com/example/springbasic/
+├── SpringBasicApplication.java
+├── controller/
+│   ├── HelloController.java
+│   ├── CalculatorController.java
+│   └── UserController.java          (완전히 RESTful하게 재작성)
+├── dto/                              (신규 패키지)
+│   ├── CreateUserRequest.java       (신규)
+│   ├── UpdateUserRequest.java       (신규)
+│   ├── PatchUserRequest.java        (신규)
+│   └── UserResponse.java            (신규)
+├── service/
+│   ├── CalculatorService.java
+│   └── UserService.java             (patchUser 메서드 추가)
+├── repository/
+│   └── UserRepository.java
+├── model/
+│   └── User.java
+└── examples/
+    └── DependencyInjectionExamples.java
+```
+
+#### 핵심 깨달음
+
+1. **RESTful API는 직관적이다**
+   - URI만 보고도 어떤 리소스인지 알 수 있음
+   - HTTP 메서드로 의도가 명확함
+
+2. **DTO는 필수다**
+   - Entity 직접 노출은 보안 위험
+   - API와 도메인 모델 분리
+
+3. **적절한 HTTP 상태 코드 사용**
+   - 201 Created는 생성 시만
+   - 204 No Content는 삭제 성공 시
+   - 404 Not Found는 리소스 없을 때
+
+4. **PUT과 PATCH는 다르다**
+   - PUT: 전체 교체 (모든 필드 필수)
+   - PATCH: 부분 수정 (변경 필드만)
+
+5. **@RequestBody는 강력하다**
+   - JSON을 자동으로 Java 객체로 변환
+   - 유효성 검증도 DTO에서 가능
+
+#### 다음 학습 주제
+
+레벨 4를 완료했습니다! 다음 단계 추천:
+
+1. **데이터베이스 연동 (JPA)** - 메모리 → 실제 DB
+2. **유효성 검증 (@Valid)** - 더 체계적인 검증
+3. **예외 처리** - @ControllerAdvice로 전역 처리
+
+---
+
 ## Claude Code 사용 팁
 
 ### 새 세션 시작 시
@@ -365,6 +625,6 @@ LEARNING_LOG.md 파일을 업데이트해서 오늘 배운 내용을 추가해�
 - **생성한 파일 수**: 12개
 - **구현한 API 엔드포인트**: 15개
 - **학습한 어노테이션**: 8개 (@SpringBootApplication, @RestController, @GetMapping, @RequestParam, @PathVariable, @Service, @Repository, @Component)
-- **학습한 디자인 패턴**: 계층 구조 (Layered Architecture), 의존성 주입 (Dependency Injection)
+- **학습한 디자인 패턴**: 계층 구조 (Layered Architecture), 의존성 ��입 (Dependency Injection)
 - **완료한 레벨**: 레벨 1 (기본), 레벨 2 (Service 레이어) ✅
 - **다음 학습 주제**: 데이터베이스 연동 (JPA) 또는 POST/PUT/DELETE 메서드

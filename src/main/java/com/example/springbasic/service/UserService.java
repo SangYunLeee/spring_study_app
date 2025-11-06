@@ -104,6 +104,32 @@ public class UserService {
     }
 
     /**
+     * 사용자 부분 수정 (PATCH)
+     * 제공된 필드만 수정
+     */
+    public User patchUser(Long id, String name, String email, Integer age) {
+        // 1. 사용자 존재 확인
+        User existingUser = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + id));
+
+        // 2. 이메일 변경 시 중복 체크
+        if (email != null && !existingUser.email().equals(email)) {
+            userRepository.findByEmail(email).ifPresent(user -> {
+                throw new IllegalArgumentException("이미 사용 중인 이메일입니다: " + email);
+            });
+        }
+
+        // 3. 변경된 필드만 업데이트 (null이 아닌 것만)
+        String newName = name != null ? name : existingUser.name();
+        String newEmail = email != null ? email : existingUser.email();
+        int newAge = age != null ? age : existingUser.age();
+
+        // 4. 새로운 User 객체 생성 및 저장
+        User updatedUser = new User(id, newName, newEmail, newAge);
+        return userRepository.save(updatedUser);
+    }
+
+    /**
      * 사용자 삭제
      */
     public void deleteUser(Long id) {
