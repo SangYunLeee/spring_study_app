@@ -1,0 +1,71 @@
+spring:
+  application:
+    name: spring-basic-app
+
+  # ===================================
+  # 데이터베이스 설정 (PostgreSQL)
+  # ===================================
+  datasource:
+    url: jdbc:postgresql://localhost:5432/springbasic
+    username: springuser
+    password: springpass
+    driver-class-name: org.postgresql.Driver
+
+    # 커넥션 풀 설정 (HikariCP)
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  # ===================================
+  # JPA / Hibernate 설정
+  # ===================================
+  jpa:
+    # Hibernate가 직접 스키마 생성하지 않음 (Liquibase가 관리)
+    hibernate:
+      ddl-auto: validate  # validate: 스키마 검증만, none: 아무것도 안함
+
+    # SQL 로그 출력
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true  # SQL 포맷팅
+        use_sql_comments: true  # 쿼리에 주석 추가
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  # ===================================
+  # Liquibase 설정 (DB 명세 관리)
+  # ===================================
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    drop-first: false  # true: 시작 시 DB 초기화 (개발 시에만 사용)
+
+# ===================================
+# 로깅 설정
+# ===================================
+logging:
+  level:
+    # Hibernate SQL 로그
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+    # Liquibase 로그
+    liquibase: INFO
+
+    # 애플리케이션 로그
+    com.example.springbasic: DEBUG
+
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+# ===================================
+# 서버 설정
+# ===================================
+server:
+  port: 8080
+  error:
+    include-message: always
+    include-stacktrace: never

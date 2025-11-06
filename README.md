@@ -1,147 +1,342 @@
-# Spring Boot 기초 학습 프로젝트
+# Spring Boot 학습 프로젝트 (명세 우선 개발)
 
-Spring Framework를 처음부터 배우는 학습용 프로젝트입니다.
+Spring Framework를 명세 우선 개발 방식(Specification-First Development)으로 배우는 학습용 프로젝트입니다.
 
 ## 프로젝트 정보
 
 - **Java 버전**: 21
 - **Spring Boot 버전**: 3.2.0
 - **빌드 도구**: Gradle 8.14.2
+- **데이터베이스**: PostgreSQL 16 (Docker)
+- **API 명세**: OpenAPI 3.0.3
+- **DB 명세**: Liquibase
 - **포트**: 8080
 
-## 프로젝트 구조
+## 핵심 아키텍처: 명세 우선 개발
+
+이 프로젝트는 **명세가 코드보다 먼저**입니다:
 
 ```
-spring_app/
-├── README.md                           # 프로젝트 설명서 (이 파일)
-├── LEARNING_LOG.md                     # 학습 진행 상황 기록
-├── NEXT_STEPS.md                       # 다음 학습 단계 안내
-├── build.gradle                        # Gradle 빌드 설정
-├── settings.gradle                     # Gradle 프로젝트 설정
-└── src/
-    └── main/
-        ├── java/com/example/springbasic/
-        │   ├── SpringBasicApplication.java      # 메인 애플리케이션
-        │   └── controller/
-        │       └── HelloController.java         # REST API 컨트롤러
-        └── resources/
-            └── application.properties           # 애플리케이션 설정
+┌─────────────────────────────────────────────────────┐
+│ API 명세 (OpenAPI)                                   │
+│ src/main/resources/openapi/                         │
+│ - api-spec.yaml (메인)                              │
+│ - paths/ (경로별 명세)                              │
+│ - schemas/ (스키마)                                 │
+└─────────────────────────────────────────────────────┘
+          ↓ OpenAPI Generator
+┌─────────────────────────────────────────────────────┐
+│ 생성된 코드 (UsersApi, DTOs)                        │
+│ build/generated/                                    │
+└─────────────────────────────────────────────────────┘
+          ↓ 구현
+┌─────────────────────────────────────────────────────┐
+│ Controller → Service → Repository                   │
+│ API 모델 ↔ 도메인 모델 변환                         │
+└─────────────────────────────────────────────────────┘
+          ↓
+┌─────────────────────────────────────────────────────┐
+│ DB 명세 (Liquibase)                                 │
+│ src/main/resources/db/changelog/                    │
+│ - db.changelog-master.yaml                          │
+│ - changes/ (변경사항)                               │
+└─────────────────────────────────────────────────────┘
+          ↓ Liquibase 실행
+┌─────────────────────────────────────────────────────┐
+│ PostgreSQL Database                                 │
+│ docker-compose로 실행                               │
+└─────────────────────────────────────────────────────┘
 ```
 
-## 실행 방법
+## 빠른 시작
 
-### 1. 애플리케이션 시작
+### 1. PostgreSQL 시작
+
+```bash
+docker-compose up -d
+```
+
+### 2. API 코드 생성
+
+```bash
+./gradlew generateApi
+```
+
+### 3. 애플리케이션 실행
 
 ```bash
 ./gradlew bootRun
 ```
 
-### 2. 애플리케이션 중지
+실행 순서:
+1. Liquibase가 DB 스키마 생성/수정
+2. JPA가 Entity와 DB 매핑 검증 (`ddl-auto: validate`)
+3. Spring Boot 애플리케이션 시작
 
-터미널에서 `Ctrl + C`를 누르거나, 백그라운드로 실행 중이라면:
+### 4. API 테스트
 
 ```bash
-# 실행 중인 프로세스 찾기
-lsof -i :8080
+# 사용자 생성
+curl -X POST http://localhost:8080/api/users \
+  -H "Content-Type: application/json" \
+  -d '{"name":"홍길동","email":"hong@example.com","age":25}'
 
-# 프로세스 종료 (PID는 위 명령어로 확인)
-kill -9 [PID]
+# 전체 조회
+curl http://localhost:8080/api/users
+
+# ID로 조회
+curl http://localhost:8080/api/users/1
+
+# 수정
+curl -X PUT http://localhost:8080/api/users/1 \
+  -H "Content-Type: application/json" \
+  -d '{"name":"홍길동","email":"hong@example.com","age":26}'
+
+# 삭제
+curl -X DELETE http://localhost:8080/api/users/1
 ```
 
-### 3. 빌드만 하기
+## 프로젝트 구조
+
+```
+spring_app/
+├── README.md                                   # 프로젝트 설명서
+├── LEARNING_LOG.md                             # 학습 진행 상황 (5개 세션)
+├── docker-compose.yml                          # PostgreSQL 설정
+├── build.gradle                                # Gradle 빌드 + OpenAPI Generator
+│
+├── src/main/
+│   ├── java/com/example/springbasic/
+│   │   ├── SpringBasicApplication.java         # 메인 애플리케이션
+│   │   ├── controller/
+│   │   │   └── UsersApiController.java         # API 구현 (생성된 인터페이스 구현)
+│   │   ├── service/
+│   │   │   └── UserService.java                # 비즈니스 로직
+│   │   ├── repository/
+│   │   │   └── UserRepository.java             # JPA Repository
+│   │   └── model/
+│   │       └── User.java                       # JPA Entity (도메인 모델)
+│   │
+│   └── resources/
+│       ├── application.yml                     # Spring Boot 설정
+│       ├── application-dev.yml                 # 개발 환경 설정
+│       │
+│       ├── openapi/                            # API 명세
+│       │   ├── api-spec.yaml                   # 메인 명세
+│       │   ├── paths/                          # 경로별 명세
+│       │   │   ├── users-base.yaml
+│       │   │   ├── users-by-id.yaml
+│       │   │   └── users-search.yaml
+│       │   └── schemas/                        # 스키마
+│       │       ├── CreateUserRequest.yaml
+│       │       ├── UpdateUserRequest.yaml
+│       │       ├── PatchUserRequest.yaml
+│       │       ├── UserResponse.yaml
+│       │       └── ErrorResponse.yaml
+│       │
+│       └── db/changelog/                       # DB 명세
+│           ├── db.changelog-master.yaml        # 메인 changeset
+│           └── changes/
+│               ├── 001-create-users-table.yaml
+│               ├── 002-add-email-index.yaml
+│               └── 003-add-timestamps.yaml
+│
+└── build/generated/                            # 자동 생성된 코드
+    └── src/main/java/
+        └── com/example/springbasic/api/
+            ├── UsersApi.java                   # API 인터페이스
+            └── model/                          # API 모델
+                ├── CreateUserRequestDto.java
+                ├── UpdateUserRequestDto.java
+                ├── PatchUserRequestDto.java
+                └── UserResponseDto.java
+```
+
+## 주요 명령어
+
+### 개발 워크플로우
 
 ```bash
+# 1. API 명세 수정 (api-spec.yaml)
+# 2. 코드 생성
+./gradlew clean generateApi
+
+# 3. 빌드
 ./gradlew build
+
+# 4. 실행
+./gradlew bootRun
+
+# 5. 테스트
+curl http://localhost:8080/api/users
 ```
 
-### 4. 테스트 실행
+### DB 명세 변경 시
 
 ```bash
-./gradlew test
+# 1. Liquibase changeset 작성 (004-xxx.yaml)
+# 2. Entity 수정 (User.java)
+# 3. 애플리케이션 재시작 (자동으로 적용됨)
+./gradlew bootRun
 ```
 
-## API 엔드포인트 테스트
-
-애플리케이션이 실행 중일 때 다음 엔드포인트를 테스트할 수 있습니다:
-
-### 1. 기본 Hello World
+### PostgreSQL 명령어
 
 ```bash
-curl http://localhost:8080/hello
-# 응답: Hello, Spring!
+# 시작
+docker-compose up -d
+
+# 상태 확인
+docker-compose ps
+
+# 로그 확인
+docker-compose logs -f postgres
+
+# 접속
+docker exec -it springbasic-postgres psql -U springuser -d springbasic
+
+# DB 내부에서
+\dt          # 테이블 목록
+\d users     # users 테이블 구조
+SELECT * FROM users;           # 데이터 조회
+SELECT * FROM databasechangelog;  # Liquibase 이력
+
+# 종료
+docker-compose stop
+
+# 완전 삭제 (데이터 포함)
+docker-compose down -v
 ```
 
-브라우저: http://localhost:8080/hello
+## 학습한 핵심 개념
 
-### 2. 쿼리 파라미터 사용
+### 1. 명세 우선 개발 (Specification-First)
 
-```bash
-curl "http://localhost:8080/greet?name=철수"
-# 응답: 안녕하세요, 철수님!
+**Code-First (기존):**
+```
+코드 작성 → 실행 → 문서 자동 생성
+```
+- 문서와 코드 불일치 가능
 
-curl http://localhost:8080/greet
-# 응답: 안녕하세요, Guest님!
+**Spec-First (현재):**
+```
+명세 작성 → 코드 생성 → 구현
+```
+- 명세가 항상 정확
+- 프론트엔드와 동시 개발 가능
+- 계약 기반 개발
+
+### 2. 계층 분리
+
+```
+API 계층 (Controller)
+  ├─ API 모델 (OpenAPI 생성)
+  ├─ CreateUserRequestDto
+  └─ UserResponseDto
+       ↕ 변환
+Domain 계층 (Service, Repository)
+  ├─ 도메인 모델 (직접 작성)
+  └─ User Entity
 ```
 
-브라우저: http://localhost:8080/greet?name=철수
+**왜 분리하나?**
+- API 변경이 비즈니스 로직에 영향 없음
+- 다른 API(GraphQL 등)에서도 같은 Service 재사용
+- 테스트 용이
 
-### 3. 경로 변수 사용
+### 3. JPA + Liquibase
 
-```bash
-curl http://localhost:8080/welcome/영희
-# 응답: 환영합니다, 영희님!
+**Liquibase:**
+- DB 스키마 버전 관리
+- 변경 이력 Git에 저장
+- 롤백 가능
+
+**ddl-auto: validate:**
+- Entity와 DB 스키마 자동 검증
+- 불일치 시 애플리케이션 시작 실패
+- 안전장치
+
+### 4. Spring의 3계층 구조
+
+```
+Controller (HTTP 요청/응답)
+    ↓
+Service (비즈니스 로직)
+    ↓
+Repository (데이터 접근)
 ```
 
-브라우저: http://localhost:8080/welcome/영희
+## API 엔드포인트
 
-### 4. JSON 응답
+| 메서드 | 경로 | 설명 |
+|--------|------|------|
+| POST | `/api/users` | 사용자 생성 |
+| GET | `/api/users` | 전체 조회 |
+| GET | `/api/users/{id}` | ID로 조회 |
+| GET | `/api/users/search?keyword=xxx` | 이름 검색 |
+| PUT | `/api/users/{id}` | 전체 수정 |
+| PATCH | `/api/users/{id}` | 부분 수정 |
+| DELETE | `/api/users/{id}` | 삭제 |
 
-```bash
-curl http://localhost:8080/info
-# 응답: {"message":"Hello","timestamp":1234567890}
-```
+## 주요 문서
 
-브라우저: http://localhost:8080/info
+### 학습 가이드
+- [LEARNING_LOG.md](LEARNING_LOG.md) - 5개 세션 학습 기록
 
-## 핵심 개념 정리
+### API 명세
+- [SPEC_FIRST_DEVELOPMENT.md](SPEC_FIRST_DEVELOPMENT.md) - 명세 우선 개발 개념
+- [MODULAR_SPEC.md](MODULAR_SPEC.md) - OpenAPI 모듈화
+- [API_TEST_GUIDE.md](API_TEST_GUIDE.md) - API 테스트 방법
 
-### Spring Boot의 주요 어노테이션
+### 아키텍처
+- [LAYER_SEPARATION.md](LAYER_SEPARATION.md) - 계층 분리
+- [WHY_NOT_API_MODEL_IN_SERVICE.md](WHY_NOT_API_MODEL_IN_SERVICE.md) - Service에서 API 모델 사용하지 않는 이유
+- [LAYER_ARCHITECTURE.md](LAYER_ARCHITECTURE.md) - 3계층 구조
 
-| 어노테이션 | 위치 | 설명 |
-|----------|------|------|
-| `@SpringBootApplication` | 메인 클래스 | Spring Boot 애플리케이션의 시작점 표시 |
-| `@RestController` | 클래스 | REST API 컨트롤러 표시, JSON 응답 자동 변환 |
-| `@GetMapping` | 메서드 | HTTP GET 요청 처리 |
-| `@RequestParam` | 파라미터 | URL 쿼리 파라미터 받기 (?name=value) |
-| `@PathVariable` | 파라미터 | URL 경로의 변수 받기 (/user/{id}) |
+### DB 관리
+- [DB_SPEC_MANAGEMENT.md](DB_SPEC_MANAGEMENT.md) - Liquibase 사용법
+- [VERIFY_DB_MAPPING.md](VERIFY_DB_MAPPING.md) - Entity-DB 매핑 검증
 
-### 파일별 역할
-
-#### [build.gradle](build.gradle)
-- 프로젝트 의존성(dependencies) 관리
-- Spring Boot 버전 설정
-- 플러그인 설정
-
-#### [SpringBasicApplication.java](src/main/java/com/example/springbasic/SpringBasicApplication.java)
-- 애플리케이션의 시작점 (main 메서드)
-- `@SpringBootApplication` 어노테이션으로 Spring Boot 설정
-
-#### [HelloController.java](src/main/java/com/example/springbasic/controller/HelloController.java)
-- HTTP 요청을 받아서 처리하는 컨트롤러
-- 4가지 엔드포인트 예제 포함
-
-#### [application.properties](src/main/resources/application.properties)
-- 서버 포트, 로그 레벨 등 애플리케이션 설정
+### 기타
+- [RESTFUL_API.md](RESTFUL_API.md) - RESTful API 설계
 
 ## 학습 진행 상황
 
-현재까지 학습한 내용은 [LEARNING_LOG.md](LEARNING_LOG.md)에서 확인하세요.
+### 완료한 레벨
 
-다음 학습할 주제는 [NEXT_STEPS.md](NEXT_STEPS.md)에서 확인하세요.
+- ✅ **레벨 1**: Spring Boot 기본
+- ✅ **레벨 2**: Service 레이어
+- ✅ **레벨 3**: RESTful API
+- ✅ **레벨 4**: 명세 우선 개발 (API)
+- ✅ **레벨 5**: 명세 우선 개발 (DB)
+
+### 학습한 기술 스택
+
+**백엔드:**
+- Spring Boot 3.2.0
+- Spring Data JPA
+- PostgreSQL 16
+
+**API 명세:**
+- OpenAPI 3.0.3
+- OpenAPI Generator
+
+**DB 명세:**
+- Liquibase
+
+**인프라:**
+- Docker Compose
+
+### 다음 학습 주제
+
+1. **유효성 검증** - `@Valid`, `@NotNull` 등
+2. **예외 처리** - `@ControllerAdvice`로 전역 처리
+3. **트랜잭션** - `@Transactional`로 데이터 일관성 보장
+4. **테스트** - JUnit + Testcontainers
 
 ## Claude Code로 계속 학습하기
 
-이 프로젝트는 Claude Code와 함께 학습하고 있습니다. 세션이 끊긴 후에도 계속 학습하려면:
+세션이 끊긴 후에도 계속 학습하려면:
 
 ### 1. 이전 학습 내용 확인
 
@@ -149,68 +344,61 @@ curl http://localhost:8080/info
 LEARNING_LOG.md 파일을 읽어줘
 ```
 
-### 2. 다음 단계 확인
+### 2. 현재 상태 확인
 
 ```
-NEXT_STEPS.md 파일을 읽어주고, 다음 단계를 진행해줘
+README.md를 읽어줘
 ```
 
-### 3. 새로운 기능 추가 요청 예시
+### 3. 다음 단계 진행
 
 ```
-Service 레이어를 추가해서 비즈니스 로직을 분리하고 싶어
-```
-
-```
-데이터베이스(H2)를 연동하고 JPA를 사용해서 데이터를 저장하고 싶어
+유효성 검증을 추가하고 싶어. @Valid를 사용해서 입력 검증을 하자
 ```
 
 ```
-POST 요청으로 데이터를 받아서 처리하는 방법을 배우고 싶어
-```
-
-### 4. 코드 설명 요청
-
-```
-HelloController.java 파일을 열고 각 메서드가 어떻게 동작하는지 설명해줘
+예외 처리를 추가하고 싶어. @ControllerAdvice로 전역 예외 처리를 만들자
 ```
 
 ## 문제 해결
 
-### 포트가 이미 사용 중일 때
+### PostgreSQL 연결 실패
 
 ```bash
-# 포트 8080을 사용하는 프로세스 찾기
-lsof -i :8080
+# 컨테이너 상태 확인
+docker-compose ps
 
-# 해당 프로세스 종료
-kill -9 [PID]
+# 로그 확인
+docker-compose logs postgres
+
+# 재시작
+docker-compose restart postgres
 ```
 
-또는 [application.properties](src/main/resources/application.properties)에서 포트 변경:
-
-```properties
-server.port=8081
-```
-
-### Gradle 빌드 오류
+### Entity-DB 매핑 불일치
 
 ```bash
-# Gradle 캐시 정리
-./gradlew clean
+# 애플리케이션 실행 시 에러 메시지 확인
+./gradlew bootRun
 
-# 다시 빌드
-./gradlew build
+# 예시: "Schema-validation: missing column [phone_number]"
+# → Liquibase에 컬럼 추가 changeset 작성 필요
 ```
 
-## 참고 자료
+### OpenAPI 코드 생성 실패
 
-- [Spring Boot 공식 문서](https://spring.io/projects/spring-boot)
-- [Spring Boot 가이드](https://spring.io/guides)
-- [Baeldung Spring 튜토리얼](https://www.baeldung.com/spring-boot)
+```bash
+# 클린 빌드
+./gradlew clean generateApi build
+
+# generated 디렉토리 확인
+ls -la build/generated/src/main/java/com/example/springbasic/api/
+```
 
 ## 프로젝트 정보
 
 - **생성일**: 2025-11-06
+- **마지막 업데이트**: 2025-11-06
 - **학습 도구**: Claude Code
-- **목적**: Spring Framework 기초 학습
+- **목적**: Spring Framework 명세 우선 개발 학습
+- **총 학습 세션**: 5회

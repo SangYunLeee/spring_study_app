@@ -20,6 +20,15 @@ dependencies {
     // Spring Boot Web - 웹 애플리케이션 개발을 위한 기본 라이브러리
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
+    // Spring Data JPA - 데이터베이스 접근 (ORM)
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    // PostgreSQL - 데이터베이스 드라이버
+    runtimeOnly 'org.postgresql:postgresql:42.7.1'
+
+    // Liquibase - DB 스키마 버전 관리 (명세 기반)
+    implementation 'org.liquibase:liquibase-core:4.25.1'
+
     // OpenAPI (Swagger) - API 명세 자동 생성
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
 
@@ -31,6 +40,9 @@ dependencies {
 
     // 테스트를 위한 라이브러리
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:postgresql'
 }
 
 tasks.named('test') {

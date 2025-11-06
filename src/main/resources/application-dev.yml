@@ -1,0 +1,22 @@
+# 개발 환경 설정
+# 실행: ./gradlew bootRun --args='--spring.profiles.active=dev'
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/springbasic_dev
+    username: devuser
+    password: devpass
+
+  jpa:
+    show-sql: true  # SQL 로그 출력
+    properties:
+      hibernate:
+        format_sql: true
+
+  liquibase:
+    drop-first: false  # true로 설정하면 시작 시 DB 초기화 (조심!)
+
+logging:
+  level:
+    com.example.springbasic: DEBUG
+    org.hibernate.SQL: DEBUG

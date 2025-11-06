@@ -628,3 +628,154 @@ LEARNING_LOG.md 파일을 업데이트해서 오늘 배운 내용을 추가해�
 - **학습한 디자인 패턴**: 계층 구조 (Layered Architecture), 의존성 ��입 (Dependency Injection)
 - **완료한 레벨**: 레벨 1 (기본), 레벨 2 (Service 레이어) ✅
 - **다음 학습 주제**: 데이터베이스 연동 (JPA) 또는 POST/PUT/DELETE 메서드
+---
+
+### 세션 4: 명세 우선 개발 (Specification-First Development) (2025-11-06)
+
+#### 학습 목표
+- OpenAPI 명세 우선 개발 방식 이해
+- Code-First vs Spec-First 차이 학습
+- OpenAPI Generator를 이용한 자동 코드 생성
+- 모듈화된 OpenAPI 구조 구축
+
+#### 완료한 작업
+
+1. **명세 우선 개발 전환**
+   - OpenAPI Generator Gradle 플러그인 추가
+   - API 명세를 코드보다 먼저 작성하는 방식으로 전환
+
+2. **모듈화된 OpenAPI 구조 구축**
+   - 메인: [api-spec.yaml](src/main/resources/openapi/api-spec.yaml)
+   - 경로별: `src/main/resources/openapi/paths/`
+   - 스키마: `src/main/resources/openapi/schemas/`
+   - $ref를 사용한 파일 분리
+
+3. **문서 작성**
+   - [SPEC_FIRST_DEVELOPMENT.md](SPEC_FIRST_DEVELOPMENT.md)
+   - [MODULAR_SPEC.md](MODULAR_SPEC.md)
+   - [LAYER_SEPARATION.md](LAYER_SEPARATION.md)
+   - [WHY_NOT_API_MODEL_IN_SERVICE.md](WHY_NOT_API_MODEL_IN_SERVICE.md)
+
+#### 학습한 핵심 개념
+
+**명세 우선 개발:**
+```
+OpenAPI 명세 작성 → 코드 생성 → 구현
+```
+- 명세가 항상 정확
+- 프론트엔드와 동시 개발 가능
+- 계약 기반 개발
+
+**계층별 모델 분리:**
+- API 계층: OpenAPI 생성 모델 (CreateUserRequestDto)
+- Domain 계층: 직접 작성 모델 (User Entity)
+- Controller가 변환 책임
+
+---
+
+### 세션 5: 데이터베이스 명세 관리 (Liquibase + PostgreSQL) (2025-11-06)
+
+#### 학습 목표
+- DB 스키마도 명세로 관리 (Liquibase)
+- PostgreSQL 연동 (Docker)
+- JPA Entity와 Liquibase 스키마 매핑
+- 명세 우선 개발을 DB까지 확장
+
+#### 완료한 작업
+
+1. **PostgreSQL 환경 구축**
+   - [docker-compose.yml](docker-compose.yml) 작성
+   - PostgreSQL 16 컨테이너 설정
+
+2. **Liquibase 설정**
+   - [db.changelog-master.yaml](src/main/resources/db/changelog/db.changelog-master.yaml)
+   - 변경사항 파일들:
+     - [001-create-users-table.yaml](src/main/resources/db/changelog/changes/001-create-users-table.yaml)
+     - [002-add-email-index.yaml](src/main/resources/db/changelog/changes/002-add-email-index.yaml)
+     - [003-add-timestamps.yaml](src/main/resources/db/changelog/changes/003-add-timestamps.yaml)
+
+3. **Entity 변환**
+   - [User.java](src/main/java/com/example/springbasic/model/User.java)
+   - Java record → JPA Entity class로 변환
+   - `@PrePersist`, `@PreUpdate` 추가
+
+4. **Repository 변환**
+   - [UserRepository.java](src/main/java/com/example/springbasic/repository/UserRepository.java)
+   - HashMap → JpaRepository 인터페이스
+   - Spring Data JPA 쿼리 메서드 사용
+
+5. **문서 작성**
+   - [DB_SPEC_MANAGEMENT.md](DB_SPEC_MANAGEMENT.md)
+   - [VERIFY_DB_MAPPING.md](VERIFY_DB_MAPPING.md)
+
+#### 학습한 핵심 개념
+
+**Liquibase:**
+- DB 스키마 버전 관리
+- changeset으로 변경 이력 추적
+- 롤백 가능
+
+**ddl-auto: validate:**
+```yaml
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate  # Entity와 DB 스키마 자동 검증
+```
+- Entity와 DB 불일치 시 시작 실패
+- 안전장치 역할
+
+**JPA Entity:**
+- record는 불변이라 JPA 부적합
+- Entity는 가변 클래스
+- getter/setter 필요
+
+**명세 우선 개발 (API + DB):**
+```
+OpenAPI 명세 (API)  ↔  Liquibase 명세 (DB)
+      ↓                      ↓
+  Controller  ↔  Service  ↔  Entity
+```
+
+#### 검증 방법
+
+1. **자동 검증**: `./gradlew bootRun` (ddl-auto: validate)
+2. **수동 확인**: `\d users` (PostgreSQL)
+3. **데이터 테스트**: POST → DB 확인 → GET
+
+#### 핵심 깨달음
+
+1. **DB도 명세로 관리**: Liquibase changeset이 Git에 기록
+2. **ddl-auto: validate는 필수**: 매핑 불일치 자동 감지
+3. **한번 실행된 changeset은 수정 금지**: 새 changeset 추가만
+4. **API와 DB 모두 명세 우선**: 완전한 Spec-First 아키텍처
+
+---
+
+## 업데이트된 학습 통계
+
+- **총 학습 세션**: 5회
+- **생성한 파일 수**: 25개 이상
+- **구현한 API 엔드포인트**: 7개 (RESTful)
+- **학습한 어노테이션**:
+  - Spring: @SpringBootApplication, @RestController, @Service, @Repository, @GetMapping, @PostMapping, @PutMapping, @PatchMapping, @DeleteMapping, @RequestParam, @PathVariable, @RequestBody
+  - JPA: @Entity, @Table, @Id, @GeneratedValue, @Column, @PrePersist, @PreUpdate
+- **학습한 디자인 패턴**:
+  - Layered Architecture (계층 구조)
+  - Dependency Injection (의존성 주입)
+  - DTO Pattern (데이터 전송 객체)
+  - Repository Pattern (데이터 접근 추상화)
+  - Specification-First Development (명세 우선 개발)
+- **학습한 도구**:
+  - OpenAPI Generator (API 코드 생성)
+  - Liquibase (DB 스키마 버전 관리)
+  - PostgreSQL (관계형 데이터베이스)
+  - Docker Compose (컨테이너 오케스트레이션)
+  - Spring Data JPA (ORM)
+- **완료한 레벨**:
+  - ✅ 레벨 1: Spring Boot 기본
+  - ✅ 레벨 2: Service 레이어
+  - ✅ 레벨 3: RESTful API
+  - ✅ 레벨 4: 명세 우선 개발 (API)
+  - ✅ 레벨 5: 명세 우선 개발 (DB)
+- **다음 학습 주제**: 유효성 검증, 예외 처리, 트랜잭션, 테스트 작성

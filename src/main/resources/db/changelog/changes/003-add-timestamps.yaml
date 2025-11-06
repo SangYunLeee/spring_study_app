@@ -1,0 +1,68 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-add-timestamps
+      author: developer
+      comment: |
+        생성/수정 시간 추적을 위한 타임스탬프 컬럼 추가
+
+        용도:
+        - created_at: 레코드 생성 시간 (자동)
+        - updated_at: 레코드 수정 시간 (자동)
+
+        향후 활용:
+        - 감사(Audit) 로그
+        - 데이터 분석
+        - API 응답에 포함 가능
+      changes:
+        # created_at 컬럼 추가
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+                  remarks: 생성 일시
+
+        # updated_at 컬럼 추가
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+                  remarks: 수정 일시
+
+        # updated_at 자동 업데이트 트리거 생성 (PostgreSQL 전용)
+        - sql:
+            sql: |
+              CREATE OR REPLACE FUNCTION update_updated_at_column()
+              RETURNS TRIGGER AS $$
+              BEGIN
+                NEW.updated_at = CURRENT_TIMESTAMP;
+                RETURN NEW;
+              END;
+              $$ LANGUAGE plpgsql;
+
+              CREATE TRIGGER update_users_updated_at
+                BEFORE UPDATE ON users
+                FOR EACH ROW
+                EXECUTE FUNCTION update_updated_at_column();
+            comment: updated_at 자동 업데이트 트리거
+
+      rollback:
+        - sql:
+            sql: |
+              DROP TRIGGER IF EXISTS update_users_updated_at ON users;
+              DROP FUNCTION IF EXISTS update_updated_at_column();
+        - dropColumn:
+            tableName: users
+            columnName: updated_at
+        - dropColumn:
+            tableName: users
+            columnName: created_at

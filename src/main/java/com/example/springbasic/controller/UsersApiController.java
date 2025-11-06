@@ -48,7 +48,7 @@ public class UsersApiController implements UsersApi {
 
             // 201 Created + Location 헤더
             return ResponseEntity
-                    .created(URI.create("/api/users/" + user.id()))
+                    .created(URI.create("/api/users/" + user.getId()))
                     .body(response);
 
         } catch (IllegalArgumentException e) {
@@ -173,10 +173,10 @@ public class UsersApiController implements UsersApi {
      */
     private UserResponse mapToUserResponse(User user) {
         return new UserResponse()
-                .id(user.id())
-                .name(user.name())
-                .email(user.email())
-                .age(user.age());
+                .id(user.getId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .age(user.getAge());
     }
 
     /**

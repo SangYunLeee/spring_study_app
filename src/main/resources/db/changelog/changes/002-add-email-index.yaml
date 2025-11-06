@@ -1,0 +1,26 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-add-email-index
+      author: developer
+      comment: |
+        이메일 검색 성능 향상을 위한 인덱스 추가
+
+        용도:
+        - GET /api/users/search/email?email=xxx API 성능 향상
+        - 로그인 시 이메일 조회 속도 개선
+
+        참고:
+        - unique 제약조건이 있어도 명시적 인덱스 추가로 검색 최적화
+      changes:
+        - createIndex:
+            indexName: idx_users_email
+            tableName: users
+            columns:
+              - column:
+                  name: email
+            remarks: 이메일 검색 성능 향상
+
+      rollback:
+        - dropIndex:
+            indexName: idx_users_email
+            tableName: users

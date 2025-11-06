@@ -90,17 +90,19 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + id));
 
         // 2. 이메일 변경 시 중복 체크
-        if (!existingUser.email().equals(email)) {
+        if (!existingUser.getEmail().equals(email)) {
             userRepository.findByEmail(email).ifPresent(user -> {
                 throw new IllegalArgumentException("이미 사용 중인 이메일입니다: " + email);
             });
         }
 
-        // 3. 새로운 User 객체 생성 (record는 불변이므로)
-        User updatedUser = new User(id, name, email, age);
+        // 3. 필드 업데이트 (JPA Entity는 setter 사용)
+        existingUser.setName(name);
+        existingUser.setEmail(email);
+        existingUser.setAge(age);
 
-        // 4. 저장
-        return userRepository.save(updatedUser);
+        // 4. 저장 (JPA가 변경 감지하여 자동 UPDATE)
+        return userRepository.save(existingUser);
     }
 
     /**
@@ -113,20 +115,25 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + id));
 
         // 2. 이메일 변경 시 중복 체크
-        if (email != null && !existingUser.email().equals(email)) {
+        if (email != null && !existingUser.getEmail().equals(email)) {
             userRepository.findByEmail(email).ifPresent(user -> {
                 throw new IllegalArgumentException("이미 사용 중인 이메일입니다: " + email);
             });
         }
 
         // 3. 변경된 필드만 업데이트 (null이 아닌 것만)
-        String newName = name != null ? name : existingUser.name();
-        String newEmail = email != null ? email : existingUser.email();
-        int newAge = age != null ? age : existingUser.age();
+        if (name != null) {
+            existingUser.setName(name);
+        }
+        if (email != null) {
+            existingUser.setEmail(email);
+        }
+        if (age != null) {
+            existingUser.setAge(age);
+        }
 
-        // 4. 새로운 User 객체 생성 및 저장
-        User updatedUser = new User(id, newName, newEmail, newAge);
-        return userRepository.save(updatedUser);
+        // 4. 저장 (JPA가 변경 감지하여 자동 UPDATE)
+        return userRepository.save(existingUser);
     }
 
     /**
@@ -151,7 +158,7 @@ public class UserService {
      */
     public List<User> getAdultUsers() {
         return userRepository.findAll().stream()
-                .filter(user -> user.age() >= 19)
+                .filter(user -> user.getAge() >= 19)
                 .toList();
     }
 
@@ -166,13 +173,13 @@ public class UserService {
         }
 
         long totalCount = allUsers.size();
-        long adultCount = allUsers.stream().filter(u -> u.age() >= 19).count();
+        long adultCount = allUsers.stream().filter(u -> u.getAge() >= 19).count();
         double averageAge = allUsers.stream()
-                .mapToInt(User::age)
+                .mapToInt(User::getAge)
                 .average()
                 .orElse(0.0);
-        int minAge = allUsers.stream().mapToInt(User::age).min().orElse(0);
-        int maxAge = allUsers.stream().mapToInt(User::age).max().orElse(0);
+        int minAge = allUsers.stream().mapToInt(User::getAge).min().orElse(0);
+        int maxAge = allUsers.stream().mapToInt(User::getAge).max().orElse(0);
 
         return new UserStatistics(totalCount, adultCount, averageAge, minAge, maxAge);
     }
