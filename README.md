@@ -101,9 +101,23 @@ curl -X DELETE http://localhost:8080/api/users/1
 ```
 spring_app/
 ├── README.md                                   # 프로젝트 설명서
-├── LEARNING_LOG.md                             # 학습 진행 상황 (5개 세션)
 ├── docker-compose.yml                          # PostgreSQL 설정
 ├── build.gradle                                # Gradle 빌드 + OpenAPI Generator
+│
+├── docs/                                       # 프로젝트 문서
+│   ├── LEARNING_LOG.md                         # 학습 진행 상황 (5개 세션)
+│   ├── SESSION_CONTEXT.md                      # 세션 복구용 컨텍스트
+│   ├── NEXT_STEPS.md                           # 다음 학습 단계
+│   ├── SPEC_FIRST_DEVELOPMENT.md               # 명세 우선 개발 개념
+│   ├── MODULAR_SPEC.md                         # OpenAPI 모듈화
+│   ├── LAYER_ARCHITECTURE.md                   # 3계층 구조
+│   ├── LAYER_SEPARATION.md                     # 계층 분리
+│   ├── WHY_NOT_API_MODEL_IN_SERVICE.md         # API 모델 분리 이유
+│   ├── DB_SPEC_MANAGEMENT.md                   # Liquibase 사용법
+│   ├── VERIFY_DB_MAPPING.md                    # Entity-DB 매핑 검증
+│   ├── API_TEST_GUIDE.md                       # API 테스트 방법
+│   ├── RESTFUL_API.md                          # RESTful API 설계
+│   └── SPECIFICATION_DRIVEN_DEVELOPMENT.md     # 명세 기반 개발
 │
 ├── src/main/
 │   ├── java/com/example/springbasic/
@@ -281,24 +295,27 @@ Repository (데이터 접근)
 ## 주요 문서
 
 ### 학습 가이드
-- [LEARNING_LOG.md](LEARNING_LOG.md) - 5개 세션 학습 기록
+- [LEARNING_LOG.md](docs/LEARNING_LOG.md) - 5개 세션 학습 기록
+- [SESSION_CONTEXT.md](docs/SESSION_CONTEXT.md) - 세션 복구용 컨텍스트
+- [NEXT_STEPS.md](docs/NEXT_STEPS.md) - 다음 학습 단계
 
 ### API 명세
-- [SPEC_FIRST_DEVELOPMENT.md](SPEC_FIRST_DEVELOPMENT.md) - 명세 우선 개발 개념
-- [MODULAR_SPEC.md](MODULAR_SPEC.md) - OpenAPI 모듈화
-- [API_TEST_GUIDE.md](API_TEST_GUIDE.md) - API 테스트 방법
+- [SPEC_FIRST_DEVELOPMENT.md](docs/SPEC_FIRST_DEVELOPMENT.md) - 명세 우선 개발 개념
+- [MODULAR_SPEC.md](docs/MODULAR_SPEC.md) - OpenAPI 모듈화
+- [API_TEST_GUIDE.md](docs/API_TEST_GUIDE.md) - API 테스트 방법
 
 ### 아키텍처
-- [LAYER_SEPARATION.md](LAYER_SEPARATION.md) - 계층 분리
-- [WHY_NOT_API_MODEL_IN_SERVICE.md](WHY_NOT_API_MODEL_IN_SERVICE.md) - Service에서 API 모델 사용하지 않는 이유
-- [LAYER_ARCHITECTURE.md](LAYER_ARCHITECTURE.md) - 3계층 구조
+- [LAYER_SEPARATION.md](docs/LAYER_SEPARATION.md) - 계층 분리
+- [WHY_NOT_API_MODEL_IN_SERVICE.md](docs/WHY_NOT_API_MODEL_IN_SERVICE.md) - Service에서 API 모델 사용하지 않는 이유
+- [LAYER_ARCHITECTURE.md](docs/LAYER_ARCHITECTURE.md) - 3계층 구조
 
 ### DB 관리
-- [DB_SPEC_MANAGEMENT.md](DB_SPEC_MANAGEMENT.md) - Liquibase 사용법
-- [VERIFY_DB_MAPPING.md](VERIFY_DB_MAPPING.md) - Entity-DB 매핑 검증
+- [DB_SPEC_MANAGEMENT.md](docs/DB_SPEC_MANAGEMENT.md) - Liquibase 사용법
+- [VERIFY_DB_MAPPING.md](docs/VERIFY_DB_MAPPING.md) - Entity-DB 매핑 검증
 
 ### 기타
-- [RESTFUL_API.md](RESTFUL_API.md) - RESTful API 설계
+- [RESTFUL_API.md](docs/RESTFUL_API.md) - RESTful API 설계
+- [SPECIFICATION_DRIVEN_DEVELOPMENT.md](docs/SPECIFICATION_DRIVEN_DEVELOPMENT.md) - 명세 기반 개발
 
 ## 학습 진행 상황
 
@@ -341,13 +358,13 @@ Repository (데이터 접근)
 ### 1. 이전 학습 내용 확인
 
 ```
-LEARNING_LOG.md 파일을 읽어줘
+docs/LEARNING_LOG.md 파일을 읽어줘
 ```
 
 ### 2. 현재 상태 확인
 
 ```
-README.md를 읽어줘
+README.md와 docs/SESSION_CONTEXT.md를 읽어줘
 ```
 
 ### 3. 다음 단계 진행
