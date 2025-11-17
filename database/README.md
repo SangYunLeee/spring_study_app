@@ -1,12 +1,19 @@
-# Database Management (dbmate)
+# Database Management (DBML + dbmate)
 
-**DB 스키마는 애플리케이션과 독립적으로 관리됩니다!**
+**DB 스키마는 DBML 명세로 시작하여 애플리케이션과 독립적으로 관리됩니다!**
 
 ## 🎯 구조
 
 ```
 database/
+├── schema.dbml             # ⭐ DB 명세 (Single Source of Truth)
 ├── .env                    # DB 연결 설정
+├── scripts/                # 유틸리티 스크립트
+│   ├── install-dbml-cli.sh        # DBML CLI 설치
+│   ├── dbml-to-sql.sh             # DBML → SQL 변환
+│   └── generate-migration.sh      # 마이그레이션 생성 도우미
+├── generated/              # DBML에서 생성된 SQL (자동)
+│   └── schema.sql
 ├── db/
 │   ├── migrations/         # 마이그레이션 파일 (순수 SQL)
 │   │   ├── 20250101000001_create_users_table.sql
@@ -16,11 +23,42 @@ database/
 └── README.md
 ```
 
+## 🌟 워크플로우
+
+```
+1. schema.dbml 수정 (명세)
+   ↓
+2. dbdiagram.io에서 시각화 (선택)
+   ↓
+3. ./scripts/dbml-to-sql.sh (SQL 생성)
+   ↓
+4. dbmate new <description> (마이그레이션 생성)
+   ↓
+5. SQL 복사 → 마이그레이션 파일
+   ↓
+6. dbmate up (실행)
+```
+
 ---
 
 ## 🚀 빠른 시작
 
-### 1. dbmate 설치
+### 1. 도구 설치
+
+#### DBML CLI 설치 (명세 관리)
+
+```bash
+# 설치 스크립트 실행
+./scripts/install-dbml-cli.sh
+
+# 또는 직접 설치
+npm install -g @dbml/cli
+
+# 확인
+dbml2sql --version
+```
+
+#### dbmate 설치 (마이그레이션 실행)
 
 ```bash
 # Mac
@@ -32,6 +70,9 @@ chmod +x /usr/local/bin/dbmate
 
 # Windows (Scoop)
 scoop install dbmate
+
+# 확인
+dbmate --version
 ```
 
 ### 2. PostgreSQL 시작
@@ -108,7 +149,82 @@ dbmate up
 
 ## 🔄 개발 워크플로우
 
-### 1️⃣ DB 스키마 변경
+### 방법 1: DBML 명세 우선 (권장!) ⭐
+
+#### 1️⃣ schema.dbml 수정
+
+```bash
+vi schema.dbml
+```
+
+```dbml
+Table users {
+  id bigserial [pk, increment]
+  name varchar(100) [not null]
+  email varchar(255) [not null, unique]
+  age integer [not null]
+  status varchar(20) [not null, default: 'active', note: '사용자 상태']  // 새로 추가!
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+
+  indexes {
+    email [name: 'idx_users_email']
+    status [name: 'idx_users_status']  // 새로 추가!
+  }
+}
+```
+
+#### 2️⃣ dbdiagram.io에서 확인 (선택)
+
+```bash
+# schema.dbml 파일 내용을 복사
+# https://dbdiagram.io/d 에서 붙여넣기
+# ERD 시각화 확인
+```
+
+#### 3️⃣ SQL 생성
+
+```bash
+./scripts/dbml-to-sql.sh
+# 결과: generated/schema.sql
+```
+
+#### 4️⃣ 마이그레이션 생성
+
+```bash
+dbmate new add_user_status
+
+# generated/schema.sql에서 필요한 부분 복사
+# → db/migrations/xxx_add_user_status.sql에 붙여넣기
+```
+
+```sql
+-- migrate:up
+ALTER TABLE users
+    ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'active';
+
+CREATE INDEX idx_users_status ON users(status);
+
+COMMENT ON COLUMN users.status IS '사용자 상태';
+
+
+-- migrate:down
+DROP INDEX IF EXISTS idx_users_status;
+ALTER TABLE users
+    DROP COLUMN status;
+```
+
+#### 5️⃣ 적용
+
+```bash
+dbmate up
+```
+
+---
+
+### 방법 2: 직접 SQL 작성
+
+#### 1️⃣ DB 스키마 변경
 
 ```bash
 # 1. 새 마이그레이션 생성
@@ -136,6 +252,9 @@ ALTER TABLE users
 ```bash
 # 3. 마이그레이션 실행
 dbmate up
+
+# 4. schema.dbml 업데이트 (수동)
+vi schema.dbml
 ```
 
 ### 2️⃣ Spring Boot Entity 업데이트

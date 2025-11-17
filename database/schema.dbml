@@ -1,0 +1,71 @@
+// DB 명세 (Single Source of Truth)
+// dbdiagram.io에서 시각화: https://dbdiagram.io/d
+//
+// 워크플로우:
+// 1. 이 파일 수정 (DBML)
+// 2. ./scripts/generate-migration.sh (SQL 생성)
+// 3. dbmate up (마이그레이션 실행)
+
+Project springbasic {
+  database_type: 'PostgreSQL'
+  Note: '''
+    # Spring Basic Application Database
+
+    명세 우선 개발 (Spec-First Development)
+    - API: OpenAPI 3.0
+    - DB: DBML (Database Markup Language)
+  '''
+}
+
+// ========================================
+// 사용자 (Users)
+// ========================================
+
+Table users {
+  id bigserial [pk, increment, note: '사용자 고유 ID (자동 증가)']
+  name varchar(100) [not null, note: '사용자 이름']
+  email varchar(255) [not null, unique, note: '이메일 주소 (로그인 ID, 중복 불가)']
+  age integer [not null, note: '나이']
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`, note: '생성 일시']
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`, note: '수정 일시']
+
+  indexes {
+    email [name: 'idx_users_email', note: '이메일 검색 성능 향상']
+  }
+
+  Note: '''
+    사용자 테이블
+
+    비즈니스 규칙:
+    - email은 unique (중복 불가)
+    - age는 0 이상
+
+    API 매핑:
+    - GET /api/users
+    - POST /api/users
+    - GET /api/users/{id}
+    - PUT /api/users/{id}
+    - DELETE /api/users/{id}
+  '''
+}
+
+// ========================================
+// 향후 추가될 테이블들
+// ========================================
+
+// Table posts {
+//   id bigserial [pk, increment]
+//   user_id bigint [not null, ref: > users.id]
+//   title varchar(255) [not null]
+//   content text
+//   created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+//   updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+// }
+
+// Table comments {
+//   id bigserial [pk, increment]
+//   post_id bigint [not null, ref: > posts.id]
+//   user_id bigint [not null, ref: > users.id]
+//   content text [not null]
+//   created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+// }

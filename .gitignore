@@ -129,6 +129,7 @@ h2/
 
 # dbmate
 database/db/schema.sql  # dbmate가 자동 생성하는 파일
+database/generated/     # DBML에서 생성된 SQL 파일
 
 # Node (만약 프론트엔드 추가 시)
 node_modules/

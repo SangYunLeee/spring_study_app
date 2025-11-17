@@ -1,8 +1,8 @@
-# DB 명세 관리 (dbmate + PostgreSQL)
+# DB 명세 관리 (DBML + dbmate + PostgreSQL)
 
-**DB 스키마는 애플리케이션과 독립적으로 관리됩니다!**
+**DB 스키마는 DBML 명세로 시작하여 애플리케이션과 독립적으로 관리됩니다!**
 
-API는 OpenAPI로, DB는 dbmate(순수 SQL)로 명세를 관리합니다.
+API는 OpenAPI로, DB는 DBML(시각화 가능)로 명세를 관리합니다.
 
 ## 🎯 전체 구조
 
@@ -28,7 +28,13 @@ API는 OpenAPI로, DB는 dbmate(순수 SQL)로 명세를 관리합니다.
 └─────────────────────────────────────────────────────────┘
                       ↓ (독립적!)
 ┌─────────────────────────────────────────────────────────┐
-│        DB 명세 (dbmate)                                  │
+│        DB 명세 (DBML) ⭐                                  │
+│        database/schema.dbml                              │
+│        - dbdiagram.io에서 시각화 가능!                   │
+└─────────────────────────────────────────────────────────┘
+                      ↓ DBML → SQL 변환
+┌─────────────────────────────────────────────────────────┐
+│        dbmate 마이그레이션                                │
 │        database/db/migrations/ (순수 SQL)                │
 │        - 20250101000001_create_users_table.sql           │
 │        - 20250101000002_add_email_index.sql              │
@@ -45,7 +51,30 @@ API는 OpenAPI로, DB는 dbmate(순수 SQL)로 명세를 관리합니다.
 
 ## 🚀 빠른 시작
 
-### 1. dbmate 설치
+### 0. 개념 이해
+
+```
+schema.dbml (명세) → SQL 생성 → dbmate 마이그레이션 → PostgreSQL
+```
+
+### 1. 도구 설치
+
+#### DBML CLI (명세 관리)
+
+```bash
+cd database
+
+# 설치
+./scripts/install-dbml-cli.sh
+
+# 또는
+npm install -g @dbml/cli
+
+# 확인
+dbml2sql --version
+```
+
+#### dbmate (마이그레이션 실행)
 
 ```bash
 # Mac (Homebrew)
