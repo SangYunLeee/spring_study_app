@@ -23,7 +23,7 @@ spring:
   # JPA / Hibernate 설정
   # ===================================
   jpa:
-    # Hibernate가 직접 스키마 생성하지 않음 (Liquibase가 관리)
+    # Hibernate가 직접 스키마 생성하지 않음 (dbmate가 독립적으로 관리)
     hibernate:
       ddl-auto: validate  # validate: 스키마 검증만, none: 아무것도 안함
 
@@ -35,14 +35,6 @@ spring:
         use_sql_comments: true  # 쿼리에 주석 추가
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
-  # ===================================
-  # Liquibase 설정 (DB 명세 관리)
-  # ===================================
-  liquibase:
-    enabled: true
-    change-log: classpath:db/changelog/db.changelog-master.yaml
-    drop-first: false  # true: 시작 시 DB 초기화 (개발 시에만 사용)
-
 # ===================================
 # 로깅 설정
 # ===================================
@@ -51,9 +43,6 @@ logging:
     # Hibernate SQL 로그
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-
-    # Liquibase 로그
-    liquibase: INFO
 
     # 애플리케이션 로그
     com.example.springbasic: DEBUG

@@ -1,6 +1,8 @@
-# DB 명세 관리 (Liquibase + PostgreSQL)
+# DB 명세 관리 (dbmate + PostgreSQL)
 
-API는 OpenAPI로, DB는 Liquibase로 명세를 관리합니다!
+**DB 스키마는 애플리케이션과 독립적으로 관리됩니다!**
+
+API는 OpenAPI로, DB는 dbmate(순수 SQL)로 명세를 관리합니다.
 
 ## 🎯 전체 구조
 
@@ -24,15 +26,15 @@ API는 OpenAPI로, DB는 Liquibase로 명세를 관리합니다!
 │        Domain Entity (User)                              │
 │        JPA @Entity                                       │
 └─────────────────────────────────────────────────────────┘
-                      ↓
+                      ↓ (독립적!)
 ┌─────────────────────────────────────────────────────────┐
-│        DB 명세 (Liquibase)                               │
-│        src/main/resources/db/changelog/                  │
-│        - 001-create-users-table.yaml                     │
-│        - 002-add-email-index.yaml                        │
-│        - 003-add-timestamps.yaml                         │
+│        DB 명세 (dbmate)                                  │
+│        database/db/migrations/ (순수 SQL)                │
+│        - 20250101000001_create_users_table.sql           │
+│        - 20250101000002_add_email_index.sql              │
+│        - 20250101000003_add_updated_at_trigger.sql       │
 └─────────────────────────────────────────────────────────┘
-                      ↓ 스키마 적용
+                      ↓ 스키마 적용 (독립 실행!)
 ┌─────────────────────────────────────────────────────────┐
 │        PostgreSQL Database                               │
 │        docker-compose로 실행                             │
@@ -43,7 +45,25 @@ API는 OpenAPI로, DB는 Liquibase로 명세를 관리합니다!
 
 ## 🚀 빠른 시작
 
-### 1. PostgreSQL 시작 (Docker)
+### 1. dbmate 설치
+
+```bash
+# Mac (Homebrew)
+brew install dbmate
+
+# Mac (수동 설치)
+curl -fsSL -o ~/bin/dbmate https://github.com/amacneil/dbmate/releases/latest/download/dbmate-macos-arm64
+chmod +x ~/bin/dbmate
+
+# Linux
+curl -fsSL -o /usr/local/bin/dbmate https://github.com/amacneil/dbmate/releases/latest/download/dbmate-linux-amd64
+chmod +x /usr/local/bin/dbmate
+
+# 확인
+dbmate --version
+```
+
+### 2. PostgreSQL 시작
 
 ```bash
 # Docker Compose로 PostgreSQL 시작
@@ -56,105 +76,89 @@ docker-compose ps
 docker-compose logs postgres
 ```
 
-### 2. 애플리케이션 실행
+### 3. DB 마이그레이션 실행
 
 ```bash
-# Liquibase가 자동으로 스키마 생성
+cd database
+
+# 모든 마이그레이션 적용
+dbmate up
+
+# 상태 확인
+dbmate status
+```
+
+### 4. 애플리케이션 실행
+
+```bash
+cd ..
+
+# Spring Boot 시작 (JPA가 스키마 검증만!)
 ./gradlew bootRun
 ```
 
 **실행 순서:**
-1. Spring Boot 시작
-2. Liquibase가 `db.changelog-master.yaml` 읽기
-3. 변경사항 확인 (databasechangelog 테이블)
-4. 새로운 changeset 실행
-5. JPA가 스키마 검증 (validate)
-6. 애플리케이션 시작 완료
-
-### 3. DB 확인
-
-```bash
-# PostgreSQL 접속
-docker exec -it springbasic-postgres psql -U springuser -d springbasic
-
-# 테이블 목록
-\dt
-
-# users 테이블 구조
-\d users
-
-# 데이터 조회
-SELECT * FROM users;
-
-# Liquibase 이력
-SELECT * FROM databasechangelog;
-
-# 종료
-\q
-```
+1. **독립적으로** dbmate로 DB 스키마 생성/변경
+2. Spring Boot 시작
+3. JPA가 스키마 검증 (validate)
+4. 애플리케이션 시작 완료
 
 ---
 
 ## 📁 디렉토리 구조
 
 ```
-src/main/resources/
-├── db/
-│   └── changelog/
-│       ├── db.changelog-master.yaml        # 메인 파일
-│       └── changes/
-│           ├── 001-create-users-table.yaml # 테이블 생성
-│           ├── 002-add-email-index.yaml    # 인덱스 추가
-│           └── 003-add-timestamps.yaml     # 타임스탬프 추가
+spring_app/
+├── database/                           # DB 관리 (독립 프로젝트!)
+│   ├── .env                            # DB 연결 설정
+│   ├── README.md                       # DB 관리 가이드
+│   └── db/
+│       ├── migrations/                 # 마이그레이션 파일 (순수 SQL)
+│       │   ├── 20250101000001_create_users_table.sql
+│       │   ├── 20250101000002_add_email_index.sql
+│       │   └── 20250101000003_add_updated_at_trigger.sql
+│       └── schema.sql                  # 현재 스키마 (자동 생성)
 │
-├── application.yml                         # 기본 설정
-└── application-dev.yml                     # 개발 환경 설정
+├── src/main/
+│   ├── java/                           # 백엔드 소스
+│   └── resources/
+│       ├── application.yml             # Spring 설정 (Liquibase 없음!)
+│       └── openapi/                    # API 명세
+│
+└── docker-compose.yml                  # PostgreSQL
 ```
 
 ---
 
-## 📝 Liquibase 명세 파일 구조
+## 📝 마이그레이션 파일 구조
 
-### 메인 파일 (db.changelog-master.yaml)
+### 파일 이름 규칙
 
-```yaml
-databaseChangeLog:
-  # 변경사항을 순서대로 나열
-  - include:
-      file: db/changelog/changes/001-create-users-table.yaml
-
-  - include:
-      file: db/changelog/changes/002-add-email-index.yaml
-
-  - include:
-      file: db/changelog/changes/003-add-timestamps.yaml
+```
+YYYYMMDDHHMMSS_description.sql
+예: 20250101000001_create_users_table.sql
 ```
 
-### 변경사항 파일 (001-create-users-table.yaml)
+### 마이그레이션 파일 내용
 
-```yaml
-databaseChangeLog:
-  - changeSet:
-      id: 001-create-users-table  # 고유 ID
-      author: developer             # 작성자
-      comment: 사용자 테이블 생성   # 설명
-      changes:
-        - createTable:
-            tableName: users
-            columns:
-              - column:
-                  name: id
-                  type: BIGSERIAL
-                  autoIncrement: true
-                  constraints:
-                    primaryKey: true
-                    nullable: false
-                  remarks: 사용자 고유 ID
+```sql
+-- migrate:up
+-- 여기에 적용할 SQL 작성
+CREATE TABLE users (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE
+);
 
-      rollback:  # 롤백 방법
-        - dropTable:
-            tableName: users
+
+-- migrate:down
+-- 여기에 롤백 SQL 작성
+DROP TABLE IF EXISTS users;
 ```
+
+**두 부분 모두 필수:**
+- `-- migrate:up`: 적용할 변경사항
+- `-- migrate:down`: 롤백 방법
 
 ---
 
@@ -164,52 +168,43 @@ databaseChangeLog:
 
 **시나리오**: User에 `phone_number` 컬럼 추가
 
-#### 1️⃣ Liquibase 명세 작성
+#### 1️⃣ 새 마이그레이션 생성
 
 ```bash
-# 새 파일 생성
-vi src/main/resources/db/changelog/changes/004-add-phone-number.yaml
+cd database
+
+# 자동으로 타임스탬프가 붙은 파일 생성
+dbmate new add_phone_number
+
+# 결과: db/migrations/20250117123045_add_phone_number.sql
 ```
 
-```yaml
-databaseChangeLog:
-  - changeSet:
-      id: 004-add-phone-number
-      author: developer
-      comment: 전화번호 컬럼 추가
-      changes:
-        - addColumn:
-            tableName: users
-            columns:
-              - column:
-                  name: phone_number
-                  type: VARCHAR(20)
-                  constraints:
-                    nullable: true
-                  remarks: 전화번호
+#### 2️⃣ SQL 작성
 
-      rollback:
-        - dropColumn:
-            tableName: users
-            columnName: phone_number
+```sql
+-- migrate:up
+ALTER TABLE users
+    ADD COLUMN phone_number VARCHAR(20);
+
+COMMENT ON COLUMN users.phone_number IS '전화번호';
+
+
+-- migrate:down
+ALTER TABLE users
+    DROP COLUMN phone_number;
 ```
 
-#### 2️⃣ 메인 파일에 추가
+#### 3️⃣ 마이그레이션 실행
 
-```yaml
-# db.changelog-master.yaml
-databaseChangeLog:
-  - include:
-      file: db/changelog/changes/001-create-users-table.yaml
-  - include:
-      file: db/changelog/changes/002-add-email-index.yaml
-  - include:
-      file: db/changelog/changes/003-add-timestamps.yaml
-  - include:
-      file: db/changelog/changes/004-add-phone-number.yaml  # 새로 추가!
+```bash
+# 적용
+dbmate up
+
+# 확인
+dbmate status
 ```
 
-#### 3️⃣ Entity 업데이트
+#### 4️⃣ Entity 업데이트
 
 ```java
 // User.java
@@ -225,170 +220,86 @@ public class User {
 }
 ```
 
-#### 4️⃣ 실행 및 확인
+#### 5️⃣ 애플리케이션 실행
 
 ```bash
-# 애플리케이션 재시작 (자동으로 changeset 실행)
+cd ..
 ./gradlew bootRun
 
-# 확인
-docker exec -it springbasic-postgres psql -U springuser -d springbasic
-\d users
+# JPA가 스키마 검증 → 성공!
 ```
 
 ---
 
-## 🎭 주요 Liquibase 작업
-
-### 테이블 생성
-
-```yaml
-- createTable:
-    tableName: products
-    columns:
-      - column:
-          name: id
-          type: BIGSERIAL
-          constraints:
-            primaryKey: true
-```
-
-### 컬럼 추가
-
-```yaml
-- addColumn:
-    tableName: users
-    columns:
-      - column:
-          name: nickname
-          type: VARCHAR(50)
-```
-
-### 컬럼 수정
-
-```yaml
-- modifyDataType:
-    tableName: users
-    columnName: email
-    newDataType: VARCHAR(500)
-```
-
-### 인덱스 추가
-
-```yaml
-- createIndex:
-    indexName: idx_users_name
-    tableName: users
-    columns:
-      - column:
-          name: name
-```
-
-### 외래 키 추가
-
-```yaml
-- addForeignKeyConstraint:
-    baseTableName: orders
-    baseColumnNames: user_id
-    referencedTableName: users
-    referencedColumnNames: id
-    constraintName: fk_orders_user
-```
-
-### 데이터 삽입
-
-```yaml
-- insert:
-    tableName: users
-    columns:
-      - column:
-          name: name
-          value: Admin
-      - column:
-          name: email
-          value: admin@example.com
-      - column:
-          name: age
-          value: 30
-```
-
----
-
-## 🔧 유용한 명령어
-
-### PostgreSQL 명령어
+## 🎭 주요 dbmate 명령어
 
 ```bash
-# DB 접속
-docker exec -it springbasic-postgres psql -U springuser -d springbasic
+# 마이그레이션 실행
+dbmate up
 
-# 테이블 목록
-\dt
+# 마이그레이션 상태 확인
+dbmate status
 
-# 특정 테이블 구조
-\d users
+# 한 단계 롤백
+dbmate down
 
-# 인덱스 목록
-\di
+# 전체 롤백
+dbmate down --all
 
-# SQL 실행
-SELECT * FROM users;
+# 새 마이그레이션 생성
+dbmate new <description>
 
-# 종료
-\q
-```
+# DB 초기화 (전체 재생성)
+dbmate drop && dbmate up
 
-### Docker 명령어
+# 현재 스키마 덤프
+dbmate dump
 
-```bash
-# PostgreSQL 시작
-docker-compose up -d
-
-# 중지
-docker-compose stop
-
-# 완전 삭제 (데이터 포함)
-docker-compose down -v
-
-# 로그 보기
-docker-compose logs -f postgres
+# 도움말
+dbmate --help
 ```
 
 ---
 
-## 🆚 Hibernate DDL vs Liquibase
+## 🆚 왜 Liquibase에서 dbmate로?
 
-### Hibernate DDL (권장하지 않음)
+### ❌ 기존 방식 (Liquibase in Spring Boot)
 
-```yaml
-spring:
-  jpa:
-    hibernate:
-      ddl-auto: update  # 또는 create, create-drop
+```
+./gradlew bootRun
+    ↓
+Spring Boot 시작
+    ↓
+Liquibase 자동 실행 (DB 변경)
+    ↓
+애플리케이션 시작
 ```
 
 **문제점:**
-- ❌ 변경 이력 없음
-- ❌ 롤백 불가
-- ❌ 팀 협업 어려움
-- ❌ 프로덕션 위험
+- DB 변경이 애플리케이션 시작에 종속
+- 프로덕션 배포 시 위험
+- YAML/XML로 복잡한 설정
+- DB 관리를 독립적으로 할 수 없음
 
-### Liquibase (권장) ✅
+### ✅ 새 방식 (dbmate 독립 실행)
 
-```yaml
-spring:
-  jpa:
-    hibernate:
-      ddl-auto: validate  # 검증만!
-  liquibase:
-    enabled: true
+```
+# DB 관리 (독립!)
+cd database
+dbmate up
+
+# 애플리케이션 실행 (분리!)
+cd ..
+./gradlew bootRun
 ```
 
 **장점:**
-- ✅ 모든 변경 이력 추적
-- ✅ 롤백 가능
-- ✅ Git으로 협업
-- ✅ 안전한 프로덕션 배포
+- ✅ DB 변경을 독립적으로 관리
+- ✅ 프로덕션 배포 전 DB 미리 마이그레이션
+- ✅ 애플리케이션 재시작 없이 DB 변경 가능
+- ✅ 순수 SQL로 명확한 제어
+- ✅ 가볍고 빠름
+- ✅ CI/CD 파이프라인에서 분리 실행
 
 ---
 
@@ -404,20 +315,24 @@ spring:
 3. Controller 구현 수정
 ```
 
-### DB 변경 시
+### DB 변경 시 (독립적!)
 
 ```
-1. Liquibase 명세 작성 (004-xxx.yaml)
+1. dbmate new <description> (마이그레이션 생성)
    ↓
-2. Entity 수정 (User.java)
+2. SQL 작성 (migrate:up / migrate:down)
    ↓
-3. ./gradlew bootRun (자동 적용)
+3. dbmate up (스키마 적용)
+   ↓
+4. Entity 수정 (User.java)
+   ↓
+5. ./gradlew bootRun (검증)
 ```
 
 ### 전체 흐름
 
 ```
-API 명세 (OpenAPI)  ←→  DB 명세 (Liquibase)
+API 명세 (OpenAPI)  ←→  DB 명세 (dbmate SQL)
        ↓                       ↓
    Controller  ←→  Service  ←→  Entity
        ↓                       ↓
@@ -426,7 +341,7 @@ API 명세 (OpenAPI)  ←→  DB 명세 (Liquibase)
 
 ---
 
-## 📊 Entity와 Liquibase 매핑
+## 📊 Entity와 SQL 매핑
 
 ### Entity (User.java)
 
@@ -455,73 +370,230 @@ public class User {
 }
 ```
 
-### Liquibase (001-create-users-table.yaml)
+### SQL (20250101000001_create_users_table.sql)
 
-```yaml
-- createTable:
-    tableName: users  # @Table(name = "users")
-    columns:
-      - column:
-          name: id  # @Column(name = "id")
-          type: BIGSERIAL  # @GeneratedValue(IDENTITY)
-          autoIncrement: true
-          constraints:
-            primaryKey: true  # @Id
-            nullable: false
+```sql
+-- migrate:up
+CREATE TABLE users (
+    -- @Id, @GeneratedValue(IDENTITY)
+    id BIGSERIAL PRIMARY KEY,
 
-      - column:
-          name: name  # @Column(name = "name")
-          type: VARCHAR(100)  # length = 100
-          constraints:
-            nullable: false  # nullable = false
+    -- @Column(name = "name", nullable = false, length = 100)
+    name VARCHAR(100) NOT NULL,
 
-      - column:
-          name: email
-          type: VARCHAR(255)
-          constraints:
-            nullable: false
-            unique: true  # unique = true
+    -- @Column(name = "email", nullable = false, unique = true)
+    email VARCHAR(255) NOT NULL UNIQUE,
 
-      - column:
-          name: age
-          type: INTEGER
-          constraints:
-            nullable: false
+    -- @Column(name = "age", nullable = false)
+    age INTEGER NOT NULL,
+
+    -- @Column(name = "created_at", updatable = false)
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    -- @Column(name = "updated_at")
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 제약 조건 이름 명시
+ALTER TABLE users
+    ADD CONSTRAINT pk_users PRIMARY KEY (id);
+
+ALTER TABLE users
+    ADD CONSTRAINT uk_users_email UNIQUE (email);
+
+
+-- migrate:down
+DROP TABLE IF EXISTS users;
 ```
 
 ---
 
 ## 🚨 주의사항
 
-### 1. changeset ID는 변경하지 마세요
+### 1. 마이그레이션 파일은 절대 수정하지 마세요
 
-```yaml
-- changeSet:
-    id: 001-create-users-table  # 이미 실행되면 절대 변경 금지!
+```bash
+# ❌ 이미 적용된 파일 수정
+vi db/migrations/20250101000001_create_users_table.sql
+
+# ✅ 새로운 마이그레이션 추가
+dbmate new fix_users_table
 ```
 
-### 2. 실행된 changeset은 수정하지 마세요
+### 2. 파일 이름 규칙 준수
 
-- ❌ 이미 적용된 파일 수정
-- ✅ 새로운 changeset 추가
+```
+✅ 20250117123045_add_phone_number.sql
+❌ add_phone_number.sql
+❌ 001_add_phone_number.sql
+```
 
-### 3. ddl-auto는 validate만
+### 3. migrate:up과 migrate:down 모두 작성
+
+```sql
+-- migrate:up
+ALTER TABLE users ADD COLUMN status VARCHAR(20);
+
+-- migrate:down
+ALTER TABLE users DROP COLUMN status;
+```
+
+### 4. Spring Boot 설정 확인
 
 ```yaml
+# application.yml
 spring:
   jpa:
     hibernate:
       ddl-auto: validate  # validate 또는 none만!
 ```
 
+**절대 create, update, create-drop 사용 금지!**
+
+---
+
+## 🔧 유용한 명령어
+
+### PostgreSQL 명령어
+
+```bash
+# DB 접속
+docker exec -it springbasic-postgres psql -U springuser -d springbasic
+
+# 테이블 목록
+\dt
+
+# 특정 테이블 구조
+\d users
+
+# 인덱스 목록
+\di
+
+# SQL 실행
+SELECT * FROM users;
+
+# 마이그레이션 이력
+SELECT * FROM schema_migrations;
+
+# 종료
+\q
+```
+
+### Docker 명령어
+
+```bash
+# PostgreSQL 시작
+docker-compose up -d
+
+# 중지
+docker-compose stop
+
+# 완전 삭제 (데이터 포함)
+docker-compose down -v
+
+# 로그 보기
+docker-compose logs -f postgres
+```
+
+---
+
+## 🔗 Spring Boot 설정
+
+### application.yml
+
+```yaml
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/springbasic
+    username: springuser
+    password: springpass
+
+  jpa:
+    hibernate:
+      ddl-auto: validate  # 검증만! (스키마 생성 안 함)
+    show-sql: true
+```
+
+**흐름:**
+1. dbmate로 DB 스키마 생성/변경 (독립적!)
+2. Spring Boot 시작
+3. JPA가 스키마 검증 (validate)
+4. 스키마 불일치 시 시작 실패 (안전!)
+
+---
+
+## 📖 예제: 전체 워크플로우
+
+### 시나리오: User에 nickname 추가
+
+```bash
+# 1. 새 마이그레이션 생성
+cd database
+dbmate new add_nickname
+```
+
+```sql
+-- 2. SQL 작성 (db/migrations/20250117_add_nickname.sql)
+-- migrate:up
+ALTER TABLE users
+    ADD COLUMN nickname VARCHAR(50);
+
+CREATE INDEX idx_users_nickname ON users(nickname);
+
+COMMENT ON COLUMN users.nickname IS '닉네임';
+
+
+-- migrate:down
+DROP INDEX IF EXISTS idx_users_nickname;
+ALTER TABLE users
+    DROP COLUMN nickname;
+```
+
+```bash
+# 3. 마이그레이션 실행
+dbmate up
+
+# 4. 확인
+dbmate status
+psql postgresql://springuser:springpass@localhost:5432/springbasic -c "\d users"
+```
+
+```java
+// 5. Entity 업데이트 (src/main/java/.../User.java)
+@Entity
+@Table(name = "users")
+public class User {
+    // ...
+
+    @Column(name = "nickname", length = 50)
+    private String nickname;
+
+    public String getNickname() {
+        return nickname;
+    }
+
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
+    }
+}
+```
+
+```bash
+# 6. 애플리케이션 실행
+cd ..
+./gradlew bootRun
+
+# JPA가 스키마 검증 → 성공!
+```
+
 ---
 
 ## 🔗 관련 문서
 
+- [database/README.md](../database/README.md) - DB 관리 상세 가이드
 - [SPEC_FIRST_DEVELOPMENT.md](SPEC_FIRST_DEVELOPMENT.md) - API 명세 우선 개발
 - [LAYER_SEPARATION.md](LAYER_SEPARATION.md) - 계층 분리
-- [WHY_NOT_API_MODEL_IN_SERVICE.md](WHY_NOT_API_MODEL_IN_SERVICE.md) - Service에서 API 모델 사용하지 않는 이유
 
 ---
 
-**이제 API와 DB 모두 명세로 관리합니다!** 🎉
+**이제 DB 관리가 애플리케이션과 독립적입니다!** 🎉

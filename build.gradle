@@ -26,9 +26,6 @@ dependencies {
     // PostgreSQL - 데이터베이스 드라이버
     runtimeOnly 'org.postgresql:postgresql:42.7.1'
 
-    // Liquibase - DB 스키마 버전 관리 (명세 기반)
-    implementation 'org.liquibase:liquibase-core:4.25.1'
-
     // OpenAPI (Swagger) - API 명세 자동 생성
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
 
