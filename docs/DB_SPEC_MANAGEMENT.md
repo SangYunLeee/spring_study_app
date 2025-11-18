@@ -92,43 +92,36 @@ chmod +x /usr/local/bin/dbmate
 dbmate --version
 ```
 
-### 2. PostgreSQL 시작
+### 2. PostgreSQL 시작 (자동 마이그레이션!)
 
 ```bash
-# Docker Compose로 PostgreSQL 시작
+# Docker Compose로 PostgreSQL + 자동 마이그레이션
 docker-compose up -d
 
 # 상태 확인
 docker-compose ps
+# springbasic-postgres  (healthy)
+# springbasic-dbmate    (exited - 마이그레이션 완료!)
 
 # 로그 확인
 docker-compose logs postgres
+docker-compose logs dbmate
 ```
 
-### 3. DB 마이그레이션 실행
+**자동 실행:**
+- PostgreSQL 시작 → 헬스체크 통과 → dbmate 자동 실행 → 마이그레이션 완료
+
+### 3. 애플리케이션 실행
 
 ```bash
-cd database
-
-# 모든 마이그레이션 적용
-dbmate up
-
-# 상태 확인
-dbmate status
-```
-
-### 4. 애플리케이션 실행
-
-```bash
-cd ..
 
 # Spring Boot 시작 (JPA가 스키마 검증만!)
 ./gradlew bootRun
 ```
 
 **실행 순서:**
-1. **독립적으로** dbmate로 DB 스키마 생성/변경
-2. Spring Boot 시작
+1. **docker-compose up -d** → PostgreSQL + dbmate 자동 마이그레이션
+2. Spring Boot 시작 (./gradlew bootRun)
 3. JPA가 스키마 검증 (validate)
 4. 애플리케이션 시작 완료
 

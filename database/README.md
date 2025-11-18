@@ -75,7 +75,7 @@ scoop install dbmate
 dbmate --version
 ```
 
-### 2. PostgreSQL 시작
+### 2. PostgreSQL 시작 (자동 마이그레이션 포함!)
 
 ```bash
 # 프로젝트 루트에서
@@ -84,14 +84,25 @@ docker-compose up -d
 
 # 확인
 docker-compose ps
+# 출력:
+# springbasic-postgres  (healthy)
+# springbasic-dbmate    (exited - 마이그레이션 완료!)
 ```
 
-### 3. 마이그레이션 실행
+**✨ docker-compose up 시 자동으로:**
+1. PostgreSQL 시작
+2. DB가 healthy 상태가 될 때까지 대기
+3. dbmate가 자동으로 마이그레이션 실행
+4. 완료 후 dbmate 컨테이너 종료
+
+**수동 마이그레이션이 필요한 경우:**
 
 ```bash
-cd database
+# 방법 1: Docker Compose 사용 (권장)
+docker-compose run --rm dbmate up
 
-# 모든 마이그레이션 적용
+# 방법 2: 로컬 dbmate 사용
+cd database
 dbmate up
 
 # 상태 확인

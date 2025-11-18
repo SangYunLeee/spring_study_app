@@ -50,11 +50,15 @@ Spring Framework를 명세 우선 개발 방식(Specification-First Development)
 
 ## 빠른 시작
 
-### 1. PostgreSQL 시작
+### 1. PostgreSQL 시작 (자동 마이그레이션 포함!)
 
 ```bash
 docker-compose up -d
 ```
+
+**자동 실행:**
+- PostgreSQL 시작
+- dbmate가 자동으로 DB 스키마 생성/마이그레이션
 
 ### 2. API 코드 생성
 
@@ -68,8 +72,8 @@ docker-compose up -d
 ./gradlew bootRun
 ```
 
-실행 순서:
-1. Liquibase가 DB 스키마 생성/수정
+**실행 순서:**
+1. docker-compose → PostgreSQL + dbmate 자동 마이그레이션
 2. JPA가 Entity와 DB 매핑 검증 (`ddl-auto: validate`)
 3. Spring Boot 애플리케이션 시작
 

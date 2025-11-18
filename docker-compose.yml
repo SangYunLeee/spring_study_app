@@ -19,6 +19,20 @@ services:
       timeout: 5s
       retries: 5
 
+  # dbmate - 자동 마이그레이션
+  dbmate:
+    image: amacneil/dbmate:v2.11.0
+    container_name: springbasic-dbmate
+    environment:
+      DATABASE_URL: "postgres://springuser:springpass@postgres:5432/springbasic?sslmode=disable"
+    command: "--wait up"
+    working_dir: /app
+    volumes:
+      - ./database/db:/app/db
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   postgres_data:
     driver: local
