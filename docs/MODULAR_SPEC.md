@@ -4,15 +4,18 @@ OpenAPI 명세가 길어지면 가독성이 떨어지므로 **파일을 분리**
 
 ## 🗂️ 디렉토리 구조
 
+**현재 프로젝트는 이미 모듈화되어 있습니다!**
+
 ```
 src/main/resources/openapi/
-├── api-spec.yaml                      # 단일 파일 버전 (기존)
-├── api-spec-modular.yaml              # 모듈화 버전 (메인 파일)
+├── api-spec.yaml                      # 📌 메인 진입점 (모듈화됨!)
 │
 ├── paths/                             # API 경로별 분리
-│   ├── users.yaml                     # /api/users 경로
-│   ├── users-by-id.yaml              # /api/users/{id} 경로
-│   └── statistics.yaml               # /api/users/statistics 경로
+│   ├── users.yaml                     # POST /api/users, GET /api/users
+│   ├── users-by-id.yaml              # GET/PUT/PATCH/DELETE /api/users/{id}
+│   ├── users-search.yaml             # GET /api/users/search
+│   ├── users-adults.yaml             # GET /api/users/adults
+│   └── users-statistics.yaml         # GET /api/users/statistics
 │
 └── schemas/                           # 스키마별 분리
     ├── requests/                      # 요청 스키마
@@ -25,13 +28,15 @@ src/main/resources/openapi/
         └── ErrorResponse.yaml
 ```
 
+**api-spec.yaml이 $ref로 외부 파일을 참조하므로 이미 모듈화된 구조입니다!**
+
 ---
 
 ## 📝 파일 분리 예제
 
-### 1. 메인 파일 (api-spec-modular.yaml)
+### 1. 메인 파일 (api-spec.yaml)
 
-**간결하고 구조가 명확!**
+**현재 프로젝트의 실제 구조 - 간결하고 명확!**
 
 ```yaml
 openapi: 3.0.1
@@ -48,17 +53,45 @@ paths:
     $ref: 'paths/users-by-id.yaml'
 
 components:
+  # 재사용 가능한 파라미터
+  parameters:
+    UserId:
+      name: id
+      in: path
+      description: 사용자 고유 ID
+      required: true
+      schema:
+        type: integer
+        format: int64
+
   schemas:
     # 외부 파일 참조
     CreateUserRequest:
       $ref: 'schemas/requests/CreateUserRequest.yaml'
     UserResponse:
       $ref: 'schemas/responses/UserResponse.yaml'
+    ErrorResponse:
+      $ref: 'schemas/responses/ErrorResponse.yaml'
+
+  # 재사용 가능한 응답
+  responses:
+    BadRequest:
+      description: 잘못된 요청
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: 리소스를 찾을 수 없음
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
 ```
 
 ### 2. 경로 파일 (paths/users.yaml)
 
-**POST, GET 등 메서드별로 정의**
+**POST, GET 등 메서드별로 정의 + 공통 응답 재사용**
 
 ```yaml
 post:
@@ -67,22 +100,39 @@ post:
   summary: 사용자 생성
   operationId: createUser
   requestBody:
+    description: 생성할 사용자 정보
+    required: true
     content:
       application/json:
         schema:
           $ref: '../schemas/requests/CreateUserRequest.yaml'
+        examples:
+          general:
+            summary: 일반 사용자 생성
+            value:
+              name: 홍길동
+              email: hong@example.com
+              age: 25
   responses:
     '201':
-      description: 생성 성공
+      description: 사용자 생성 성공
+      headers:
+        Location:
+          description: 생성된 리소스의 URI
+          schema:
+            type: string
+            example: /api/users/1
       content:
         application/json:
           schema:
             $ref: '../schemas/responses/UserResponse.yaml'
+    '400':
+      $ref: '../api-spec.yaml#/components/responses/BadRequest'
 
 get:
   tags:
     - users
-  summary: 전체 사용자 조회
+  summary: 전체 사용자 목록 조회
   operationId: getAllUsers
   responses:
     '200':
@@ -97,11 +147,14 @@ get:
 
 ### 3. 스키마 파일 (schemas/requests/CreateUserRequest.yaml)
 
-**스키마만 집중해서 작성**
+**스키마만 집중해서 작성 + 상세한 제약사항**
 
 ```yaml
 type: object
-description: 사용자 생성 요청
+description: |
+  사용자 생성 요청 (POST /api/users)
+
+  모든 필드가 필수입니다.
 required:
   - name
   - email
@@ -109,15 +162,25 @@ required:
 properties:
   name:
     type: string
-    description: 사용자 이름
-    example: 홍길동
+    description: 사용자 이름 (최소 1자 이상)
     minLength: 1
+    maxLength: 100
+    example: 홍길동
   email:
     type: string
+    description: |
+      이메일 주소 (로그인 ID로 사용)
+
+      **제약사항:**
+      - 이메일 형식이어야 함
+      - 시스템 내에서 중복 불가 (유니크)
     format: email
+    maxLength: 255
     example: hong@example.com
   age:
     type: integer
+    description: 나이 (0~150 사이)
+    format: int32
     minimum: 0
     maximum: 150
     example: 25
@@ -190,17 +253,16 @@ schema:
 
 ---
 
-## ⚙️ 설정 변경
+## ⚙️ 설정 (현재 프로젝트)
 
-### build.gradle 수정
+### build.gradle 설정
 
-모듈화된 명세를 사용하려면 입력 파일만 변경:
+**현재 프로젝트는 이미 모듈화된 api-spec.yaml을 사용 중입니다:**
 
 ```gradle
 tasks.register('generateApi', org.openapitools.generator.gradle.plugin.tasks.GenerateTask) {
     generatorName = 'spring'
-    // 기존: inputSpec = "$rootDir/src/main/resources/openapi/api-spec.yaml"
-    inputSpec = "$rootDir/src/main/resources/openapi/api-spec-modular.yaml"  // 변경!
+    inputSpec = "$rootDir/src/main/resources/openapi/api-spec.yaml"  // 이미 모듈화됨!
     outputDir = "$buildDir/generated"
     // ...
 }
@@ -210,11 +272,18 @@ tasks.register('generateApi', org.openapitools.generator.gradle.plugin.tasks.Gen
 
 ```bash
 # 코드 생성
-./gradlew generateApi
+./gradlew clean generateApi
 
-# 에러 없이 생성되는지 확인
+# 생성된 API 인터페이스 확인
 ls build/generated/src/main/java/com/example/springbasic/api/
+# UsersApi.java (생성됨)
+
+# 생성된 모델 확인
+ls build/generated/src/main/java/com/example/springbasic/model/
+# CreateUserRequest.java, UserResponse.java 등
 ```
+
+**OpenAPI Generator는 $ref를 자동으로 해석하여 하나의 통합 명세로 처리합니다!**
 
 ---
 
@@ -459,8 +528,28 @@ OpenAPI Generator는 자동으로 `$ref`를 해석하므로 걱정 없음!
 
 ---
 
-**현재 프로젝트:**
-- 단일 파일: [api-spec.yaml](src/main/resources/openapi/api-spec.yaml)
-- 모듈화 예제: [api-spec-modular.yaml](src/main/resources/openapi/api-spec-modular.yaml)
+## 🎯 현재 프로젝트 상태
 
-원하는 방식을 선택해서 사용하세요! 🎉
+**이미 모듈화된 구조를 사용 중입니다!** ✅
+
+- **메인 파일**: [api-spec.yaml](../src/main/resources/openapi/api-spec.yaml)
+- **경로 파일**: [paths/](../src/main/resources/openapi/paths/)
+  - [users.yaml](../src/main/resources/openapi/paths/users.yaml)
+  - [users-by-id.yaml](../src/main/resources/openapi/paths/users-by-id.yaml)
+- **스키마 파일**: [schemas/](../src/main/resources/openapi/schemas/)
+  - [requests/CreateUserRequest.yaml](../src/main/resources/openapi/schemas/requests/CreateUserRequest.yaml)
+  - [responses/UserResponse.yaml](../src/main/resources/openapi/schemas/responses/UserResponse.yaml)
+  - [responses/ErrorResponse.yaml](../src/main/resources/openapi/schemas/responses/ErrorResponse.yaml)
+
+**특징:**
+- ✅ 외부 파일 참조 (`$ref`)
+- ✅ 공통 컴포넌트 재사용 (`components.parameters`, `components.responses`)
+- ✅ 상세한 설명과 풍부한 예제
+- ✅ 일관된 디렉토리 구조
+
+**새로운 API 추가 시:**
+1. `paths/` 폴더에 새 파일 생성
+2. `api-spec.yaml`의 `paths:` 섹션에 참조 추가
+3. `./gradlew generateApi` 실행
+
+🎉
