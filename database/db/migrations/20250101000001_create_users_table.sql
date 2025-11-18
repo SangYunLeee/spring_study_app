@@ -23,12 +23,7 @@ CREATE TABLE users (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- 제약 조건 이름 명시
-ALTER TABLE users
-    ADD CONSTRAINT pk_users PRIMARY KEY (id);
-
-ALTER TABLE users
-    ADD CONSTRAINT uk_users_email UNIQUE (email);
+-- 제약 조건 이름 명시 (email unique는 이미 CREATE TABLE에서 선언됨)
 
 -- 컬럼 코멘트
 COMMENT ON TABLE users IS '사용자 테이블';

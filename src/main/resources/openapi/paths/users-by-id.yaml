@@ -2,17 +2,10 @@ get:
   tags:
     - users
   summary: ID로 사용자 조회
-  description: 특정 ID의 사용자를 조회합니다.
+  description: 특정 사용자를 ID로 조회합니다.
   operationId: getUserById
   parameters:
-    - name: id
-      in: path
-      description: 사용자 ID
-      required: true
-      schema:
-        type: integer
-        format: int64
-        example: 1
+    - $ref: '../api-spec.yaml#/components/parameters/UserId'
   responses:
     '200':
       description: 조회 성공
@@ -20,30 +13,27 @@ get:
         application/json:
           schema:
             $ref: '../schemas/responses/UserResponse.yaml'
+          example:
+            id: 1
+            name: 홍길동
+            email: hong@example.com
+            age: 25
     '404':
-      description: 사용자를 찾을 수 없음
-      content:
-        application/json:
-          schema:
-            $ref: '../schemas/responses/ErrorResponse.yaml'
+      $ref: '../api-spec.yaml#/components/responses/NotFound'
 
 put:
   tags:
     - users
-  summary: 사용자 전체 정보 수정
+  summary: 사용자 전체 정보 수정 (PUT)
   description: |
-    사용자의 모든 정보를 수정합니다.
-    모든 필드가 필수입니다.
+    사용자의 **모든 정보**를 교체합니다.
+
+    **PUT vs PATCH:**
+    - PUT: 모든 필드 필수 (전체 교체)
+    - PATCH: 일부 필드만 제공 (부분 수정)
   operationId: updateUser
   parameters:
-    - name: id
-      in: path
-      description: 사용자 ID
-      required: true
-      schema:
-        type: integer
-        format: int64
-        example: 1
+    - $ref: '../api-spec.yaml#/components/parameters/UserId'
   requestBody:
     description: 수정할 사용자 정보 (모든 필드 필수)
     required: true
@@ -51,6 +41,10 @@ put:
       application/json:
         schema:
           $ref: '../schemas/requests/UpdateUserRequest.yaml'
+        example:
+          name: 홍길동
+          email: hong.updated@example.com
+          age: 26
   responses:
     '200':
       description: 수정 성공
@@ -58,30 +52,36 @@ put:
         application/json:
           schema:
             $ref: '../schemas/responses/UserResponse.yaml'
+          example:
+            id: 1
+            name: 홍길동
+            email: hong.updated@example.com
+            age: 26
     '400':
-      description: 잘못된 요청
+      $ref: '../api-spec.yaml#/components/responses/BadRequest'
     '404':
-      description: 사용자를 찾을 수 없음
+      $ref: '../api-spec.yaml#/components/responses/NotFound'
 
 patch:
   tags:
     - users
-  summary: 사용자 부분 정보 수정
+  summary: 사용자 부분 정보 수정 (PATCH)
   description: |
-    사용자의 일부 정보만 수정합니다.
-    변경할 필드만 제공하면 됩니다.
+    사용자의 **일부 정보만** 수정합니다.
+
+    **PUT vs PATCH:**
+    - PUT: 모든 필드 필수 (전체 교체)
+    - PATCH: 일부 필드만 제공 (부분 수정)
+
+    **사용 예:**
+    - 나이만 수정: `{"age": 26}`
+    - 이메일만 수정: `{"email": "new@example.com"}`
+    - 여러 필드 수정: `{"name": "김철수", "age": 30}`
   operationId: patchUser
   parameters:
-    - name: id
-      in: path
-      description: 사용자 ID
-      required: true
-      schema:
-        type: integer
-        format: int64
-        example: 1
+    - $ref: '../api-spec.yaml#/components/parameters/UserId'
   requestBody:
-    description: 수정할 필드 (모든 필드 선택적)
+    description: 수정할 필드 (최소 1개 이상 필요)
     required: true
     content:
       application/json:
@@ -92,11 +92,15 @@ patch:
             summary: 나이만 수정
             value:
               age: 26
-          nameAndEmail:
-            summary: 이름과 이메일 수정
+          emailOnly:
+            summary: 이메일만 수정
+            value:
+              email: hong.new@example.com
+          nameAndAge:
+            summary: 이름과 나이 수정
             value:
               name: 김철수
-              email: kim@example.com
+              age: 30
   responses:
     '200':
       description: 수정 성공
@@ -104,28 +108,31 @@ patch:
         application/json:
           schema:
             $ref: '../schemas/responses/UserResponse.yaml'
+          example:
+            id: 1
+            name: 홍길동
+            email: hong@example.com
+            age: 26
     '400':
-      description: 잘못된 요청 (필드가 하나도 없음)
+      $ref: '../api-spec.yaml#/components/responses/BadRequest'
     '404':
-      description: 사용자를 찾을 수 없음
+      $ref: '../api-spec.yaml#/components/responses/NotFound'
 
 delete:
   tags:
     - users
   summary: 사용자 삭제
-  description: 특정 사용자를 시스템에서 삭제합니다.
+  description: |
+    특정 사용자를 시스템에서 영구적으로 삭제합니다.
+
+    **주의:**
+    - 삭제된 데이터는 복구할 수 없습니다
+    - 성공 시 204 No Content를 반환합니다
   operationId: deleteUser
   parameters:
-    - name: id
-      in: path
-      description: 사용자 ID
-      required: true
-      schema:
-        type: integer
-        format: int64
-        example: 1
+    - $ref: '../api-spec.yaml#/components/parameters/UserId'
   responses:
     '204':
-      description: 삭제 성공 (응답 본문 없음)
+      $ref: '../api-spec.yaml#/components/responses/NoContent'
     '404':
-      description: 사용자를 찾을 수 없음
+      $ref: '../api-spec.yaml#/components/responses/NotFound'

@@ -1,11 +1,21 @@
 type: object
-description: 에러 응답
+description: |
+  에러 응답 (모든 4xx, 5xx 응답에서 공통으로 사용)
+
+  **사용 예:**
+  - 404: "사용자를 찾을 수 없습니다 (ID: 999)"
+  - 400: "이메일이 이미 존재합니다"
+  - 400: "나이는 0 이상이어야 합니다"
+required:
+  - message
+  - timestamp
 properties:
   message:
     type: string
-    description: 에러 메시지
-    example: User not found
+    description: 사용자에게 표시할 에러 메시지
+    example: "사용자를 찾을 수 없습니다 (ID: 999)"
   timestamp:
     type: string
-    description: 에러 발생 시각
+    description: 에러 발생 시각 (ISO 8601 형식)
     format: date-time
+    example: "2025-01-18T10:30:00Z"

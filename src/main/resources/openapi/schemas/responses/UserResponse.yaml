@@ -1,5 +1,13 @@
 type: object
-description: 사용자 응답 (조회, 생성, 수정 시 반환)
+description: |
+  사용자 응답 (조회, 생성, 수정 시 공통으로 반환)
+
+  **사용 위치:**
+  - GET /api/users (배열로 반환)
+  - GET /api/users/{id}
+  - POST /api/users (201 Created)
+  - PUT /api/users/{id}
+  - PATCH /api/users/{id}
 required:
   - id
   - name
@@ -8,19 +16,26 @@ required:
 properties:
   id:
     type: integer
-    description: 사용자 고유 ID
+    description: 사용자 고유 ID (자동 생성, 읽기 전용)
     format: int64
+    readOnly: true
     example: 1
   name:
     type: string
     description: 사용자 이름
+    minLength: 1
+    maxLength: 100
     example: 홍길동
   email:
     type: string
-    description: 이메일 주소
+    description: 이메일 주소 (로그인 ID)
+    format: email
+    maxLength: 255
     example: hong@example.com
   age:
     type: integer
     description: 나이
     format: int32
+    minimum: 0
+    maximum: 150
     example: 25

@@ -1,5 +1,8 @@
 type: object
-description: 사용자 생성 요청
+description: |
+  사용자 생성 요청 (POST /api/users)
+
+  모든 필드가 필수입니다.
 required:
   - name
   - email
@@ -7,17 +10,24 @@ required:
 properties:
   name:
     type: string
-    description: 사용자 이름
-    example: 홍길동
+    description: 사용자 이름 (최소 1자 이상)
     minLength: 1
+    maxLength: 100
+    example: 홍길동
   email:
     type: string
-    description: 이메일 주소 (중복 불가)
+    description: |
+      이메일 주소 (로그인 ID로 사용)
+
+      **제약사항:**
+      - 이메일 형식이어야 함
+      - 시스템 내에서 중복 불가 (유니크)
     format: email
+    maxLength: 255
     example: hong@example.com
   age:
     type: integer
-    description: 나이
+    description: 나이 (0~150 사이)
     format: int32
     minimum: 0
     maximum: 150

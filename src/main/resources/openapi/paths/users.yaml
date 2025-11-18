@@ -7,7 +7,8 @@ post:
 
     **제약사항:**
     - 이메일은 중복될 수 없습니다
-    - 나이는 0 이상이어야 합니다
+    - 나이는 0 이상 150 이하여야 합니다
+    - 이름은 최소 1자 이상이어야 합니다
   operationId: createUser
   requestBody:
     description: 생성할 사용자 정보
@@ -17,18 +18,24 @@ post:
         schema:
           $ref: '../schemas/requests/CreateUserRequest.yaml'
         examples:
-          example1:
+          general:
             summary: 일반 사용자 생성
             value:
               name: 홍길동
               email: hong@example.com
               age: 25
+          youngUser:
+            summary: 미성년자 생성
+            value:
+              name: 김영희
+              email: young@example.com
+              age: 17
   responses:
     '201':
       description: 사용자 생성 성공
       headers:
         Location:
-          description: 생성된 리소스 URI
+          description: 생성된 리소스의 URI (클라이언트가 GET 요청으로 조회 가능)
           schema:
             type: string
             example: /api/users/1
@@ -36,14 +43,24 @@ post:
         application/json:
           schema:
             $ref: '../schemas/responses/UserResponse.yaml'
+          example:
+            id: 1
+            name: 홍길동
+            email: hong@example.com
+            age: 25
     '400':
-      description: 잘못된 요청 (중복 이메일, 유효성 검증 실패 등)
+      $ref: '../api-spec.yaml#/components/responses/BadRequest'
 
 get:
   tags:
     - users
-  summary: 전체 사용자 조회
-  description: 시스템에 등록된 모든 사용자를 조회합니다.
+  summary: 전체 사용자 목록 조회
+  description: |
+    시스템에 등록된 모든 사용자를 조회합니다.
+
+    **참고:**
+    - 사용자가 없으면 빈 배열 `[]`을 반환합니다
+    - 페이지네이션은 추후 지원 예정입니다
   operationId: getAllUsers
   responses:
     '200':
@@ -54,3 +71,18 @@ get:
             type: array
             items:
               $ref: '../schemas/responses/UserResponse.yaml'
+          examples:
+            withUsers:
+              summary: 사용자가 있는 경우
+              value:
+                - id: 1
+                  name: 홍길동
+                  email: hong@example.com
+                  age: 25
+                - id: 2
+                  name: 김철수
+                  email: kim@example.com
+                  age: 30
+            empty:
+              summary: 사용자가 없는 경우
+              value: []
