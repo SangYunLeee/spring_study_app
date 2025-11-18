@@ -3,7 +3,7 @@
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/springbasic_dev
+    url: jdbc:postgresql://localhost:15432/springbasic_dev
     username: devuser
     password: devpass
 

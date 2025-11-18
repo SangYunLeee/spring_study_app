@@ -6,7 +6,7 @@ spring:
   # 데이터베이스 설정 (PostgreSQL)
   # ===================================
   datasource:
-    url: jdbc:postgresql://localhost:5432/springbasic
+    url: jdbc:postgresql://localhost:15432/springbasic
     username: springuser
     password: springpass
     driver-class-name: org.postgresql.Driver
