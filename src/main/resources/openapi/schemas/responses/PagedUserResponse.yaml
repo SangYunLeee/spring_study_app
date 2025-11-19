@@ -1,0 +1,54 @@
+type: object
+description: |
+  페이지네이션된 사용자 목록 응답
+
+  Spring Data JPA의 Page<T> 인터페이스 구조를 따릅니다.
+properties:
+  content:
+    type: array
+    description: 현재 페이지의 사용자 목록
+    items:
+      $ref: './UserResponse.yaml'
+
+  totalElements:
+    type: integer
+    format: int64
+    description: 전체 사용자 수
+    example: 100
+
+  totalPages:
+    type: integer
+    format: int32
+    description: 전체 페이지 수
+    example: 10
+
+  number:
+    type: integer
+    format: int32
+    description: 현재 페이지 번호 (0부터 시작)
+    example: 0
+
+  size:
+    type: integer
+    format: int32
+    description: 페이지 크기 (한 페이지당 항목 수)
+    example: 10
+
+  first:
+    type: boolean
+    description: 첫 페이지 여부
+    example: true
+
+  last:
+    type: boolean
+    description: 마지막 페이지 여부
+    example: false
+
+required:
+  - content
+  - totalElements
+  - totalPages
+  - number
+  - size
+  - first
+  - last

@@ -4,6 +4,10 @@ import com.example.springbasic.api.UsersApi;
 import com.example.springbasic.api.model.*;
 import com.example.springbasic.model.User;
 import com.example.springbasic.service.UserService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -60,16 +64,39 @@ public class UsersApiController implements UsersApi {
     }
 
     /**
-     * GET /api/users - 전체 사용자 목록 조회
-     * DB에 저장된 모든 사용자를 리스트로 반환
+     * GET /api/users - 전체 사용자 목록 조회 (페이징 & 정렬 지원)
+     *
+     * Spring Data JPA의 Pageable을 사용한 페이지네이션:
+     * - page: 페이지 번호 (0부터 시작)
+     * - size: 한 페이지당 항목 수
+     * - sort: 정렬 기준 (예: "name,asc" 또는 "age,desc")
+     *
+     * 사용 예:
+     * - GET /api/users?page=0&size=10
+     * - GET /api/users?page=1&size=20&sort=name,asc
+     * - GET /api/users?sort=age,desc
      */
     @Override
-    public ResponseEntity<List<UserResponse>> getAllUsers() {
-        List<UserResponse> users = userService.getAllUsers().stream()
-                .map(this::mapToUserResponse)
-                .toList();
+    public ResponseEntity<PagedUserResponse> getAllUsers(Integer page, Integer size, String sort) {
+        // 1. Pageable 객체 생성 (페이지, 크기, 정렬)
+        Pageable pageable = createPageable(page, size, sort);
 
-        return ResponseEntity.ok(users);
+        // 2. Service에서 페이징된 데이터 조회
+        Page<User> userPage = userService.getAllUsers(pageable);
+
+        // 3. Page<User> → PagedUserResponse 변환
+        PagedUserResponse response = new PagedUserResponse()
+                .content(userPage.getContent().stream()
+                        .map(this::mapToUserResponse)
+                        .toList())
+                .totalElements(userPage.getTotalElements())
+                .totalPages(userPage.getTotalPages())
+                .number(userPage.getNumber())
+                .size(userPage.getSize())
+                .first(userPage.isFirst())
+                .last(userPage.isLast());
+
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -216,5 +243,36 @@ public class UsersApiController implements UsersApi {
         return request.getName() != null ||
                 request.getEmail() != null ||
                 request.getAge() != null;
+    }
+
+    /**
+     * Pageable 객체 생성
+     *
+     * sort 파라미터 파싱:
+     * - "name,asc" → Sort.by("name").ascending()
+     * - "age,desc" → Sort.by("age").descending()
+     * - null → 정렬 없음 (기본 순서)
+     *
+     * @param page 페이지 번호 (0부터 시작)
+     * @param size 페이지 크기
+     * @param sort 정렬 기준 (형식: "필드명,방향")
+     * @return Pageable 객체
+     */
+    private Pageable createPageable(Integer page, Integer size, String sort) {
+        // 정렬 파싱
+        if (sort != null && !sort.isBlank()) {
+            String[] sortParams = sort.split(",");
+            String property = sortParams[0];  // 필드명
+            String direction = sortParams.length > 1 ? sortParams[1] : "asc";  // 방향 (기본값: asc)
+
+            Sort sortObj = direction.equalsIgnoreCase("desc")
+                    ? Sort.by(property).descending()
+                    : Sort.by(property).ascending();
+
+            return PageRequest.of(page, size, sortObj);
+        }
+
+        // 정렬 없음
+        return PageRequest.of(page, size);
     }
 }

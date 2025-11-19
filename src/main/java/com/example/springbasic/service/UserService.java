@@ -4,6 +4,8 @@ import com.example.springbasic.exception.DuplicateEmailException;
 import com.example.springbasic.exception.UserNotFoundException;
 import com.example.springbasic.model.User;
 import com.example.springbasic.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -72,7 +74,25 @@ public class UserService {
     }
 
     /**
-     * 모든 사용자 조회
+     * 모든 사용자 조회 (페이징 지원)
+     *
+     * Spring Data JPA의 Pageable을 사용한 페이지네이션:
+     * - Pageable: 페이지 번호, 크기, 정렬 정보를 담은 인터페이스
+     * - Page<T>: 페이지 데이터 + 메타데이터 (총 개수, 총 페이지 등)
+     *
+     * 사용 예:
+     * - PageRequest.of(0, 10) : 첫 페이지, 10개씩
+     * - PageRequest.of(0, 10, Sort.by("name").ascending()) : 이름 오름차순
+     *
+     * @Transactional(readOnly = true): 읽기 전용
+     */
+    @Transactional(readOnly = true)
+    public Page<User> getAllUsers(Pageable pageable) {
+        return userRepository.findAll(pageable);
+    }
+
+    /**
+     * 모든 사용자 조회 (페이징 없음 - 호환성 유지)
      *
      * @Transactional(readOnly = true): 읽기 전용
      */
