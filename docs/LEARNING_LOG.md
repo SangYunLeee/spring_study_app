@@ -996,17 +996,263 @@ class UserServiceIntegrationTest {
 
 ---
 
+### 세션 9: 단위 테스트 (Mockito) (2025-11-19)
+
+#### 학습 목표
+- Mockito를 사용한 단위 테스트 작성
+- Mock 객체의 개념과 사용법
+- Service와 Controller 단위 테스트
+- 통합 테스트와의 차이 이해
+
+#### 완료한 작업
+
+1. **UserService 단위 테스트**
+   - [UserServiceTest.java](src/test/java/com/example/springbasic/service/UserServiceTest.java)
+   - @Mock으로 UserRepository 모킹
+   - @InjectMocks로 UserService 테스트
+   - 9개 테스트 메서드 (CRUD + 예외 케이스)
+
+2. **UsersApiController 단위 테스트**
+   - [UsersApiControllerTest.java](src/test/java/com/example/springbasic/controller/UsersApiControllerTest.java)
+   - @WebMvcTest로 Controller만 테스트
+   - MockMvc로 HTTP 요청 시뮬레이션
+   - @MockBean으로 UserService 모킹
+   - 13개 테스트 메서드 (모든 HTTP 엔드포인트)
+
+3. **User 엔티티 수정**
+   - setId() 메서드 추가 (테스트 전용)
+
+#### 학습한 핵심 개념
+
+**Mockito 기본:**
+```java
+@ExtendWith(MockitoExtension.class)
+class UserServiceTest {
+    @Mock
+    private UserRepository userRepository;  // 가짜 객체
+
+    @InjectMocks
+    private UserService userService;  // Mock 주입받음
+
+    @Test
+    void createUser_Success() {
+        when(userRepository.save(any())).thenReturn(savedUser);
+        User result = userService.createUser("홍길동", "hong@example.com", 25);
+        verify(userRepository).save(any());
+    }
+}
+```
+
+**MockMvc 사용:**
+```java
+@WebMvcTest(UsersApiController.class)
+class UsersApiControllerTest {
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockBean
+    private UserService userService;
+
+    @Test
+    void createUser_Success() throws Exception {
+        mockMvc.perform(post("/api/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{...}"))
+            .andExpect(status().isCreated());
+    }
+}
+```
+
+**단위 테스트 vs 통합 테스트:**
+- 단위: Mock 사용, 빠름, 특정 계층만
+- 통합: 실제 DB, 느림, 전체 시스템
+
+#### 핵심 깨달음
+
+1. **빠른 피드백**: 단위 테스트는 0.1초 이내
+2. **계층별 테스트**: Service와 Controller 분리 테스트
+3. **Mock의 힘**: 의존성 없이 독립적 테스트
+4. **검증 패턴**: when().thenReturn(), verify()
+
+---
+
+### 세션 10: Swagger UI 자동 문서화 (2025-11-19)
+
+#### 학습 목표
+- Springdoc OpenAPI로 Swagger UI 설정
+- 기존 OpenAPI 명세와 연동
+- 브라우저에서 API 테스트
+
+#### 완료한 작업
+
+1. **Swagger UI 설정**
+   - build.gradle에 springdoc-openapi 의존성 추가
+   - [application.yml](src/main/resources/application.yml)에 Swagger 설정
+   - [OpenApiConfig.java](src/main/java/com/example/springbasic/config/OpenApiConfig.java) 업데이트
+
+2. **접속 확인**
+   - http://localhost:8080/swagger-ui.html
+   - http://localhost:8080/api-docs
+
+#### 학습한 핵심 개념
+
+**Swagger UI 장점:**
+- 자동 문서 생성
+- 브라우저에서 API 테스트
+- 프론트엔드와 스펙 공유
+
+**설정:**
+```yaml
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /api-docs
+```
+
+---
+
+### 세션 12: JPA 연관관계 매핑 및 N+1 문제 (2025-11-19)
+
+#### 학습 목표
+- @OneToMany, @ManyToOne 연관관계
+- FetchType.LAZY 지연 로딩
+- N+1 문제 이해 및 해결
+- Fetch Join 사용법
+
+#### 완료한 작업
+
+1. **엔티티 추가**
+   - [Post.java](src/main/java/com/example/springbasic/model/Post.java) - 게시글
+   - [Comment.java](src/main/java/com/example/springbasic/model/Comment.java) - 댓글
+   - [User.java](src/main/java/com/example/springbasic/model/User.java) 수정 (posts 관계 추가)
+
+2. **Repository 추가**
+   - [PostRepository.java](src/main/java/com/example/springbasic/repository/PostRepository.java)
+   - [CommentRepository.java](src/main/java/com/example/springbasic/repository/CommentRepository.java)
+   - Fetch Join 쿼리 메서드
+
+3. **DB 스키마**
+   - [20250101000004_create_posts_table.sql](database/db/migrations/20250101000004_create_posts_table.sql)
+   - [20250101000005_create_comments_table.sql](database/db/migrations/20250101000005_create_comments_table.sql)
+   - [schema.dbml](database/schema.dbml) 업데이트
+
+4. **N+1 테스트**
+   - [NPlusOneProblemTest.java](src/test/java/com/example/springbasic/repository/NPlusOneProblemTest.java)
+
+#### 학습한 핵심 개념
+
+**연관관계:**
+```
+User (1) ────< (N) Post (1) ────< (N) Comment
+```
+
+**N+1 문제:**
+```java
+// ❌ N+1 발생
+List<Post> posts = postRepository.findAll();  // 1개 쿼리
+for (Post post : posts) {
+    post.getAuthor().getName();  // N개 쿼리!
+}
+
+// ✅ Fetch Join으로 해결
+@Query("SELECT p FROM Post p JOIN FETCH p.author")
+List<Post> findAllWithAuthor();  // 1개 쿼리로 해결!
+```
+
+**FetchType.LAZY:**
+- 기본값으로 사용
+- 필요할 때만 조회
+- N+1 문제 주의
+
+#### 핵심 깨달음
+
+1. **N+1은 성능 킬러**: 100개 데이터 = 101개 쿼리
+2. **Fetch Join이 해결책**: 1개 JOIN 쿼리로 해결
+3. **LAZY는 필수**: EAGER는 사용 금지
+4. **SQL 로그 확인**: show-sql로 쿼리 개수 확인
+
+---
+
+### 세션 13: QueryDSL - 타입 안전한 쿼리 (2025-11-19)
+
+#### 학습 목표
+- QueryDSL 설정 및 Q-Type 생성
+- JPQL 문자열 → Java 코드
+- 타입 안전성과 컴파일 타임 검증
+- 동적 쿼리 작성 (BooleanBuilder)
+
+#### 완료한 작업
+
+1. **QueryDSL 설정**
+   - build.gradle에 QueryDSL 의존성 추가
+   - Annotation Processor 설정
+   - Q-Type 클래스 자동 생성 (QUser, QPost, QComment)
+
+2. **Config 작성**
+   - [QueryDslConfig.java](src/main/java/com/example/springbasic/config/QueryDslConfig.java)
+   - JPAQueryFactory Bean 등록
+
+3. **Custom Repository**
+   - [CommentRepositoryCustom.java](src/main/java/com/example/springbasic/repository/CommentRepositoryCustom.java) - 인터페이스
+   - [CommentRepositoryImpl.java](src/main/java/com/example/springbasic/repository/CommentRepositoryImpl.java) - 구현체
+   - [CommentRepository.java](src/main/java/com/example/springbasic/repository/CommentRepository.java) 수정 (Custom 상속)
+
+4. **비교 테스트**
+   - [QueryDslVsJpqlTest.java](src/test/java/com/example/springbasic/repository/QueryDslVsJpqlTest.java)
+
+#### 학습한 핵심 개념
+
+**JPQL vs QueryDSL:**
+```java
+// JPQL: 문자열, 런타임 에러
+@Query("SELECT c FROM Comment c WHERE c.post.id = :postId")
+
+// QueryDSL: Java 코드, 컴파일 타임 에러
+queryFactory
+    .selectFrom(comment)
+    .where(comment.post.id.eq(postId))
+    .fetch();
+```
+
+**동적 쿼리:**
+```java
+BooleanBuilder builder = new BooleanBuilder();
+if (content != null) {
+    builder.and(comment.content.contains(content));
+}
+if (postId != null) {
+    builder.and(comment.post.id.eq(postId));
+}
+```
+
+**QueryDSL 장점:**
+- ✅ 타입 안전성 (컴파일 타임 검증)
+- ✅ IDE 자동완성
+- ✅ 리팩토링 자동 추적
+- ✅ 동적 쿼리 작성 쉬움
+
+#### 핵심 깨달음
+
+1. **문자열 → 코드**: JPQL의 취약점 해결
+2. **컴파일 타임 검증**: 오타를 즉시 발견
+3. **동적 쿼리의 힘**: 조건 조합 자유자재
+4. **JPA와 공존**: Spring Data JPA와 함께 사용
+
+---
+
 ## 업데이트된 학습 통계
 
-- **총 학습 세션**: 8회
-- **생성한 파일 수**: 30개 이상
+- **총 학습 세션**: 13회
+- **생성한 파일 수**: 45개 이상
 - **구현한 API 엔드포인트**: 9개 (RESTful + 페이징)
+- **구현한 엔티티**: 3개 (User, Post, Comment)
 - **학습한 어노테이션**:
   - Spring: @SpringBootApplication, @RestController, @Service, @Repository, @GetMapping, @PostMapping, @PutMapping, @PatchMapping, @DeleteMapping, @RequestParam, @PathVariable, @RequestBody, @RestControllerAdvice, @ExceptionHandler, @Valid
-  - JPA: @Entity, @Table, @Id, @GeneratedValue, @Column, @PrePersist, @PreUpdate
+  - JPA: @Entity, @Table, @Id, @GeneratedValue, @Column, @PrePersist, @PreUpdate, @OneToMany, @ManyToOne, @JoinColumn
   - Transaction: @Transactional
   - Validation: @NotNull, @NotBlank, @Email, @Min, @Max, @Size
-  - Test: @SpringBootTest, @Test, @DisplayName, @AfterEach
+  - Test: @SpringBootTest, @Test, @DisplayName, @AfterEach, @ExtendWith, @Mock, @InjectMocks, @WebMvcTest, @MockBean
 - **학습한 디자인 패턴**:
   - Layered Architecture (계층 구조)
   - Dependency Injection (의존성 주입)
@@ -1014,25 +1260,29 @@ class UserServiceIntegrationTest {
   - Repository Pattern (데이터 접근 추상화)
   - Specification-First Development (명세 우선 개발)
   - Global Exception Handling (전역 예외 처리)
+  - Custom Repository Pattern (QueryDSL)
 - **학습한 도구**:
   - OpenAPI Generator (API 코드 생성)
-  - Liquibase (DB 스키마 버전 관리)
+  - dbmate (DB 마이그레이션)
   - PostgreSQL (관계형 데이터베이스)
   - Docker Compose (컨테이너 오케스트레이션)
   - Spring Data JPA (ORM)
+  - QueryDSL (타입 안전 쿼리)
+  - Mockito (Mock 프레임워크)
   - JUnit 5 (테스트 프레임워크)
   - AssertJ (테스트 assertion 라이브러리)
+  - Springdoc OpenAPI (Swagger UI)
 - **완료한 레벨**:
-  - ✅ 레벨 1: Spring Boot 기본
-  - ✅ 레벨 2: Service 레이어
-  - ✅ 레벨 3: RESTful API
-  - ✅ 레벨 4: 명세 우선 개발 (API)
-  - ✅ 레벨 5: 명세 우선 개발 (DB)
-  - ✅ 레벨 6: 전역 예외 처리
-  - ✅ 레벨 7: Bean Validation
+  - ✅ 레벨 1-5: Spring Boot 기초 + 명세 우선 개발
+  - ✅ 레벨 6: 전역 예외 처리 (@RestControllerAdvice)
+  - ✅ 레벨 7: Bean Validation (@Valid)
   - ✅ 레벨 8: 트랜잭션 & 통합 테스트
+  - ✅ 레벨 9: 단위 테스트 (Mockito)
+  - ✅ 레벨 10: Swagger UI
+  - ✅ 레벨 12: JPA 연관관계 + N+1 문제
+  - ✅ 레벨 13: QueryDSL (타입 안전 쿼리)
 - **다음 학습 주제**:
-  - 단위 테스트 (Mock 사용)
   - Spring Security (인증/인가)
-  - API 문서화 자동화
+  - 성능 최적화 (캐싱, 인덱스)
+  - 비동기 처리 (@Async, Event)
   - 배포 (Docker, CI/CD)
