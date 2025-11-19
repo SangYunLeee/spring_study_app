@@ -19,9 +19,14 @@ import java.util.List;
  * - JpaRepository 상속으로 기본 CRUD 자동 제공
  * - 메서드 이름으로 쿼리 자동 생성
  * - @Query로 복잡한 쿼리 작성
+ *
+ * QueryDSL:
+ * - CommentRepositoryCustom 상속으로 QueryDSL 메서드 추가
+ * - 타입 안전한 쿼리 작성
+ * - 동적 쿼리 작성 쉬움
  */
 @Repository
-public interface CommentRepository extends JpaRepository<Comment, Long> {
+public interface CommentRepository extends JpaRepository<Comment, Long>, CommentRepositoryCustom {
 
     /**
      * 게시글로 댓글 조회
