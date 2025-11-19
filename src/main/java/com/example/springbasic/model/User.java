@@ -116,6 +116,14 @@ public class User {
         return id;
     }
 
+    /**
+     * ID 설정 (테스트 전용)
+     * 실제 운영 코드에서는 사용하지 말 것 (DB가 자동 생성)
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public String getName() {
         return name;
     }
