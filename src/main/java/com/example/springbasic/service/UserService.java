@@ -1,5 +1,7 @@
 package com.example.springbasic.service;
 
+import com.example.springbasic.exception.DuplicateEmailException;
+import com.example.springbasic.exception.UserNotFoundException;
 import com.example.springbasic.model.User;
 import com.example.springbasic.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -37,7 +39,7 @@ public class UserService {
     public User createUser(String name, String email, int age) {
         // 비즈니스 로직 1: 중복 이메일 체크
         if (userRepository.findByEmail(email).isPresent()) {
-            throw new IllegalArgumentException("이미 존재하는 이메일입니다: " + email);
+            throw new DuplicateEmailException(email);  // Custom Exception 사용
         }
 
         // 비즈니스 로직 2: User 객체 생성 및 검증 (User의 생성자에서 자동 검증)
@@ -49,9 +51,12 @@ public class UserService {
 
     /**
      * ID로 사용자 조회
+     *
+     * @throws UserNotFoundException 사용자가 존재하지 않을 경우
      */
-    public Optional<User> getUserById(Long id) {
-        return userRepository.findById(id);
+    public User getUserById(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
     }
 
     /**
@@ -87,12 +92,12 @@ public class UserService {
     public User updateUser(Long id, String name, String email, int age) {
         // 1. 사용자 존재 확인
         User existingUser = userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + id));
+                .orElseThrow(() -> new UserNotFoundException(id));  // Custom Exception 사용
 
         // 2. 이메일 변경 시 중복 체크
         if (!existingUser.getEmail().equals(email)) {
             userRepository.findByEmail(email).ifPresent(user -> {
-                throw new IllegalArgumentException("이미 사용 중인 이메일입니다: " + email);
+                throw new DuplicateEmailException(email);  // Custom Exception 사용
             });
         }
 
@@ -112,12 +117,12 @@ public class UserService {
     public User patchUser(Long id, String name, String email, Integer age) {
         // 1. 사용자 존재 확인
         User existingUser = userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + id));
+                .orElseThrow(() -> new UserNotFoundException(id));  // Custom Exception 사용
 
         // 2. 이메일 변경 시 중복 체크
         if (email != null && !existingUser.getEmail().equals(email)) {
             userRepository.findByEmail(email).ifPresent(user -> {
-                throw new IllegalArgumentException("이미 사용 중인 이메일입니다: " + email);
+                throw new DuplicateEmailException(email);  // Custom Exception 사용
             });
         }
 
@@ -141,7 +146,7 @@ public class UserService {
      */
     public void deleteUser(Long id) {
         if (!userRepository.existsById(id)) {
-            throw new IllegalArgumentException("사용자를 찾을 수 없습니다: " + id);
+            throw new UserNotFoundException(id);  // Custom Exception 사용
         }
         userRepository.deleteById(id);
     }

@@ -31,32 +31,38 @@ public class UsersApiController implements UsersApi {
         this.userService = userService;
     }
 
+    /**
+     * POST /api/users - 사용자 생성
+     * 요청 데이터로 새 사용자를 DB에 저장하고 생성된 정보를 반환
+     *
+     * 예외 처리:
+     * - DuplicateEmailException → GlobalExceptionHandler가 400 반환
+     * - try-catch 불필요!
+     */
     @Override
     public ResponseEntity<UserResponse> createUser(
             com.example.springbasic.api.model.CreateUserRequest createUserRequest
     ) {
-        try {
-            // 생성된 API 모델 → 도메인 모델 변환
-            User user = userService.createUser(
-                    createUserRequest.getName(),
-                    createUserRequest.getEmail(),
-                    createUserRequest.getAge()
-            );
+        // 생성된 API 모델 → 도메인 모델 변환
+        User user = userService.createUser(
+                createUserRequest.getName(),
+                createUserRequest.getEmail(),
+                createUserRequest.getAge()
+        );
 
-            // 도메인 모델 → API 응답 모델 변환
-            UserResponse response = mapToUserResponse(user);
+        // 도메인 모델 → API 응답 모델 변환
+        UserResponse response = mapToUserResponse(user);
 
-            // 201 Created + Location 헤더
-            return ResponseEntity
-                    .created(URI.create("/api/users/" + user.getId()))
-                    .body(response);
-
-        } catch (IllegalArgumentException e) {
-            // 400 Bad Request
-            return ResponseEntity.badRequest().build();
-        }
+        // 201 Created + Location 헤더
+        return ResponseEntity
+                .created(URI.create("/api/users/" + user.getId()))
+                .body(response);
     }
 
+    /**
+     * GET /api/users - 전체 사용자 목록 조회
+     * DB에 저장된 모든 사용자를 리스트로 반환
+     */
     @Override
     public ResponseEntity<List<UserResponse>> getAllUsers() {
         List<UserResponse> users = userService.getAllUsers().stream()
@@ -66,14 +72,23 @@ public class UsersApiController implements UsersApi {
         return ResponseEntity.ok(users);
     }
 
+    /**
+     * GET /api/users/{id} - 특정 사용자 조회
+     * ID로 사용자를 찾아서 반환 (없으면 404)
+     *
+     * 예외 처리:
+     * - UserNotFoundException → GlobalExceptionHandler가 404 + 에러 메시지 반환
+     */
     @Override
     public ResponseEntity<UserResponse> getUserById(Long id) {
-        return userService.getUserById(id)
-                .map(this::mapToUserResponse)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        User user = userService.getUserById(id);
+        return ResponseEntity.ok(mapToUserResponse(user));
     }
 
+    /**
+     * GET /api/users/search?keyword={keyword} - 사용자 이름 검색
+     * 이름에 키워드가 포함된 사용자들을 찾아서 반환
+     */
     @Override
     public ResponseEntity<List<UserResponse>> searchUsers(String keyword) {
         List<UserResponse> users = userService.searchUsersByName(keyword).stream()
@@ -83,6 +98,10 @@ public class UsersApiController implements UsersApi {
         return ResponseEntity.ok(users);
     }
 
+    /**
+     * GET /api/users/adults - 성인 사용자만 조회
+     * 나이 19세 이상인 사용자들만 필터링해서 반환
+     */
     @Override
     public ResponseEntity<List<UserResponse>> getAdultUsers() {
         List<UserResponse> users = userService.getAdultUsers().stream()
@@ -92,6 +111,10 @@ public class UsersApiController implements UsersApi {
         return ResponseEntity.ok(users);
     }
 
+    /**
+     * GET /api/users/statistics - 사용자 통계 조회
+     * 전체 인원, 성인 수, 평균/최소/최대 나이 등을 집계해서 반환
+     */
     @Override
     public ResponseEntity<com.example.springbasic.api.model.UserStatistics> getUserStatistics() {
         UserService.UserStatistics stats = userService.getUserStatistics();
@@ -108,26 +131,37 @@ public class UsersApiController implements UsersApi {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * PUT /api/users/{id} - 사용자 전체 수정
+     * 모든 필드를 새 값으로 교체 (부분 수정은 PATCH 사용)
+     *
+     * 예외 처리:
+     * - UserNotFoundException → GlobalExceptionHandler가 404 반환
+     * - DuplicateEmailException → GlobalExceptionHandler가 400 반환
+     */
     @Override
     public ResponseEntity<UserResponse> updateUser(
             Long id,
             com.example.springbasic.api.model.UpdateUserRequest updateUserRequest
     ) {
-        try {
-            User updatedUser = userService.updateUser(
-                    id,
-                    updateUserRequest.getName(),
-                    updateUserRequest.getEmail(),
-                    updateUserRequest.getAge()
-            );
+        User updatedUser = userService.updateUser(
+                id,
+                updateUserRequest.getName(),
+                updateUserRequest.getEmail(),
+                updateUserRequest.getAge()
+        );
 
-            return ResponseEntity.ok(mapToUserResponse(updatedUser));
-
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
-        }
+        return ResponseEntity.ok(mapToUserResponse(updatedUser));
     }
 
+    /**
+     * PATCH /api/users/{id} - 사용자 부분 수정
+     * 제공된 필드만 수정하고 나머지는 유지 (최소 1개 필드 필요)
+     *
+     * 예외 처리:
+     * - UserNotFoundException → GlobalExceptionHandler가 404 반환
+     * - DuplicateEmailException → GlobalExceptionHandler가 400 반환
+     */
     @Override
     public ResponseEntity<UserResponse> patchUser(
             Long id,
@@ -138,32 +172,28 @@ public class UsersApiController implements UsersApi {
             return ResponseEntity.badRequest().build();
         }
 
-        try {
-            User patchedUser = userService.patchUser(
-                    id,
-                    patchUserRequest.getName(),
-                    patchUserRequest.getEmail(),
-                    patchUserRequest.getAge()
-            );
+        User patchedUser = userService.patchUser(
+                id,
+                patchUserRequest.getName(),
+                patchUserRequest.getEmail(),
+                patchUserRequest.getAge()
+        );
 
-            return ResponseEntity.ok(mapToUserResponse(patchedUser));
-
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
-        }
+        return ResponseEntity.ok(mapToUserResponse(patchedUser));
     }
 
+    /**
+     * DELETE /api/users/{id} - 사용자 삭제
+     * 해당 ID의 사용자를 DB에서 영구 삭제
+     *
+     * 예외 처리:
+     * - UserNotFoundException → GlobalExceptionHandler가 404 반환
+     */
     @Override
     public ResponseEntity<Void> deleteUser(Long id) {
-        try {
-            userService.deleteUser(id);
-            // 204 No Content
-            return ResponseEntity.noContent().build();
-
-        } catch (IllegalArgumentException e) {
-            // 404 Not Found
-            return ResponseEntity.notFound().build();
-        }
+        userService.deleteUser(id);
+        // 204 No Content
+        return ResponseEntity.noContent().build();
     }
 
     // ========== 헬퍼 메서드 ==========
