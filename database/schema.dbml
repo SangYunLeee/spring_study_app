@@ -50,22 +50,87 @@ Table users {
 }
 
 // ========================================
-// 향후 추가될 테이블들
+// 게시글 (Posts)
 // ========================================
 
-// Table posts {
-//   id bigserial [pk, increment]
-//   user_id bigint [not null, ref: > users.id]
-//   title varchar(255) [not null]
-//   content text
-//   created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
-//   updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
-// }
+Table posts {
+  id bigserial [pk, increment, note: '게시글 고유 ID (자동 증가)']
+  title varchar(200) [not null, note: '게시글 제목']
+  content text [not null, note: '게시글 내용']
+  user_id bigint [not null, ref: > users.id, note: '작성자 ID (외래 키)']
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`, note: '생성 일시']
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`, note: '수정 일시']
 
-// Table comments {
-//   id bigserial [pk, increment]
-//   post_id bigint [not null, ref: > posts.id]
-//   user_id bigint [not null, ref: > users.id]
-//   content text [not null]
-//   created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
-// }
+  indexes {
+    user_id [name: 'idx_posts_user_id', note: '작성자별 게시글 조회']
+    created_at [name: 'idx_posts_created_at', note: '최신 게시글 조회']
+    (user_id, created_at) [name: 'idx_posts_user_created', note: '특정 사용자의 최신 게시글']
+  }
+
+  Note: '''
+    게시글 테이블
+
+    연관관계:
+    - User (N:1) - 한 명의 User가 여러 Post 작성
+    - Comment (1:N) - 하나의 Post에 여러 Comment
+
+    비즈니스 규칙:
+    - title은 200자 이하
+    - content는 필수
+    - 작성자(user_id)는 필수
+
+    JPA 매핑:
+    - @ManyToOne: Post → User (작성자)
+    - @OneToMany: Post → Comment (댓글 목록)
+    - FetchType.LAZY: 지연 로딩
+  '''
+}
+
+// ========================================
+// 댓글 (Comments)
+// ========================================
+
+Table comments {
+  id bigserial [pk, increment, note: '댓글 고유 ID (자동 증가)']
+  content text [not null, note: '댓글 내용']
+  user_id bigint [not null, ref: > users.id, note: '작성자 ID (외래 키)']
+  post_id bigint [not null, ref: > posts.id, note: '게시글 ID (외래 키)']
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`, note: '생성 일시']
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`, note: '수정 일시']
+
+  indexes {
+    post_id [name: 'idx_comments_post_id', note: '게시글별 댓글 조회']
+    user_id [name: 'idx_comments_user_id', note: '작성자별 댓글 조회']
+    (post_id, created_at) [name: 'idx_comments_post_created', note: '특정 게시글의 최신 댓글']
+    (post_id, user_id) [name: 'idx_comments_post_user', note: '특정 게시글의 특정 사용자 댓글']
+  }
+
+  Note: '''
+    댓글 테이블
+
+    연관관계:
+    - User (N:1) - 한 명의 User가 여러 Comment 작성
+    - Post (N:1) - 하나의 Post에 여러 Comment
+
+    비즈니스 규칙:
+    - content는 필수
+    - 작성자(user_id)는 필수
+    - 게시글(post_id)는 필수
+
+    JPA 매핑:
+    - @ManyToOne: Comment → User (작성자)
+    - @ManyToOne: Comment → Post (게시글)
+    - FetchType.LAZY: 지연 로딩
+  '''
+}
+
+// ========================================
+// 연관관계 다이어그램
+// ========================================
+
+// User (1) ────< (N) Post (1) ────< (N) Comment
+//  작성자           게시글              댓글
+//
+// - 한 명의 User는 여러 Post를 작성
+// - 하나의 Post는 여러 Comment를 가짐
+// - 한 명의 User는 여러 Comment를 작성

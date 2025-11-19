@@ -2,6 +2,8 @@ package com.example.springbasic.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -38,6 +40,23 @@ public class User {
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    // ========== 연관관계: Post (작성한 게시글 목록) ==========
+
+    /**
+     * @OneToMany: 일대다 관계
+     * - 하나의 User가 여러 Post를 작성
+     * - mappedBy = "author": Post 엔티티의 author 필드가 주인
+     * - cascade = CascadeType.ALL: User 저장/삭제 시 Post도 함께 (실무에서는 주의!)
+     * - orphanRemoval = true: User와 연관 끊긴 Post 자동 삭제 (실무에서는 주의!)
+     * - fetch = FetchType.LAZY: 지연 로딩 (User 조회 시 Post는 조회 안함)
+     *
+     * 주의사항:
+     * - cascade, orphanRemoval은 신중하게 사용
+     * - 실무에서는 보통 User 삭제 시 Post는 유지하거나 soft delete 사용
+     */
+    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<Post> posts = new ArrayList<>();
 
     // ========== JPA 필수: 기본 생성자 ==========
     protected User() {
@@ -157,6 +176,34 @@ public class User {
 
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
+    }
+
+    /**
+     * 작성한 게시글 목록 조회
+     * - 읽기 전용으로 반환 (외부에서 직접 수정 방지)
+     */
+    public List<Post> getPosts() {
+        return new ArrayList<>(posts);
+    }
+
+    // ========== 연관관계 편의 메서드 ==========
+
+    /**
+     * 게시글 추가
+     * - 양방향 연관관계 설정 (User ↔ Post)
+     */
+    public void addPost(Post post) {
+        posts.add(post);
+        post.setAuthor(this);  // 양방향 설정
+    }
+
+    /**
+     * 게시글 제거
+     * - orphanRemoval = true 덕분에 DB에서도 자동 삭제
+     */
+    public void removePost(Post post) {
+        posts.remove(post);
+        post.setAuthor(null);  // 연관관계 해제
     }
 
     // ========== Object 메서드 ==========
