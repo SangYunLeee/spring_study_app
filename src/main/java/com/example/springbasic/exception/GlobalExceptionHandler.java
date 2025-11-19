@@ -4,8 +4,11 @@ import com.example.springbasic.dto.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.stream.Collectors;
 
 /**
  * 전역 예외 처리기 (Global Exception Handler)
@@ -34,6 +37,27 @@ public class GlobalExceptionHandler {
             HttpServletRequest request
     ) {
         return buildErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage(), request);
+    }
+
+    /**
+     * 400 Bad Request - @Valid 유효성 검증 실패
+     *
+     * 발생 시점: @Valid 어노테이션으로 DTO 검증 실패
+     * 예: 이메일 형식 오류, 나이 범위 초과 등
+     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleValidationException(
+            MethodArgumentNotValidException ex,
+            HttpServletRequest request
+    ) {
+        // 모든 검증 오류 메시지를 하나로 합치기
+        String errorMessage = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .collect(Collectors.joining(", "));
+
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, errorMessage, request);
     }
 
     /**
