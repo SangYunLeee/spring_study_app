@@ -5,6 +5,7 @@ import com.example.springbasic.exception.UserNotFoundException;
 import com.example.springbasic.model.User;
 import com.example.springbasic.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -35,7 +36,13 @@ public class UserService {
     /**
      * 사용자 생성
      * 비즈니스 규칙: 중복 이메일 체크
+     *
+     * @Transactional:
+     * - 중복 이메일 체크(조회) + 저장이 하나의 트랜잭션
+     * - 중간에 예외 발생 시 자동 롤백
+     * - 동시성 문제 방지 (같은 이메일로 동시 가입 시도 시)
      */
+    @Transactional
     public User createUser(String name, String email, int age) {
         // 비즈니스 로직 1: 중복 이메일 체크
         if (userRepository.findByEmail(email).isPresent()) {
@@ -52,8 +59,13 @@ public class UserService {
     /**
      * ID로 사용자 조회
      *
+     * @Transactional(readOnly = true):
+     * - 읽기 전용 트랜잭션 (성능 최적화)
+     * - DB에 변경 없음을 명시 → flush 생략, 최적화 가능
+     *
      * @throws UserNotFoundException 사용자가 존재하지 않을 경우
      */
+    @Transactional(readOnly = true)
     public User getUserById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
@@ -61,21 +73,30 @@ public class UserService {
 
     /**
      * 모든 사용자 조회
+     *
+     * @Transactional(readOnly = true): 읽기 전용
      */
+    @Transactional(readOnly = true)
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
 
     /**
      * 이메일로 사용자 찾기
+     *
+     * @Transactional(readOnly = true): 읽기 전용
      */
+    @Transactional(readOnly = true)
     public Optional<User> getUserByEmail(String email) {
         return userRepository.findByEmail(email);
     }
 
     /**
      * 이름으로 사용자 검색
+     *
+     * @Transactional(readOnly = true): 읽기 전용
      */
+    @Transactional(readOnly = true)
     public List<User> searchUsersByName(String keyword) {
         if (keyword == null || keyword.isBlank()) {
             throw new IllegalArgumentException("검색어를 입력해주세요");
@@ -88,7 +109,13 @@ public class UserService {
      * 비즈니스 규칙:
      * 1. 사용자가 존재해야 함
      * 2. 다른 사용자의 이메일로 변경 불가
+     *
+     * @Transactional:
+     * - 사용자 조회 + 중복 체크 + 수정이 하나의 트랜잭션
+     * - 중간에 실패 시 모든 변경사항 롤백
+     * - Dirty Checking: save() 없이도 변경 감지하여 자동 UPDATE
      */
+    @Transactional
     public User updateUser(Long id, String name, String email, int age) {
         // 1. 사용자 존재 확인
         User existingUser = userRepository.findById(id)
@@ -113,7 +140,10 @@ public class UserService {
     /**
      * 사용자 부분 수정 (PATCH)
      * 제공된 필드만 수정
+     *
+     * @Transactional: updateUser와 동일한 이유
      */
+    @Transactional
     public User patchUser(Long id, String name, String email, Integer age) {
         // 1. 사용자 존재 확인
         User existingUser = userRepository.findById(id)
@@ -143,7 +173,12 @@ public class UserService {
 
     /**
      * 사용자 삭제
+     *
+     * @Transactional:
+     * - 존재 확인 + 삭제가 하나의 트랜잭션
+     * - 확인과 삭제 사이에 다른 트랜잭션이 끼어들 수 없음
      */
+    @Transactional
     public void deleteUser(Long id) {
         if (!userRepository.existsById(id)) {
             throw new UserNotFoundException(id);  // Custom Exception 사용
@@ -153,14 +188,20 @@ public class UserService {
 
     /**
      * 전체 사용자 수 조회
+     *
+     * @Transactional(readOnly = true): 읽기 전용
      */
+    @Transactional(readOnly = true)
     public long getUserCount() {
         return userRepository.count();
     }
 
     /**
      * 성인 사용자만 조회 (비즈니스 로직 예제)
+     *
+     * @Transactional(readOnly = true): 읽기 전용
      */
+    @Transactional(readOnly = true)
     public List<User> getAdultUsers() {
         return userRepository.findAll().stream()
                 .filter(user -> user.getAge() >= 19)
@@ -169,7 +210,10 @@ public class UserService {
 
     /**
      * 나이대별 사용자 수 통계 (비즈니스 로직 예제)
+     *
+     * @Transactional(readOnly = true): 읽기 전용
      */
+    @Transactional(readOnly = true)
     public UserStatistics getUserStatistics() {
         List<User> allUsers = userRepository.findAll();
 
