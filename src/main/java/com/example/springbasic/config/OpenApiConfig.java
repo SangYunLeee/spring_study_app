@@ -28,27 +28,34 @@ public class OpenApiConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Spring Boot 학습 프로젝트 API")
+                        .title("Spring Boot User API")
                         .version("1.0.0")
                         .description("""
-                                # Spring Boot 기초 학습용 RESTful API
+                                # 명세 우선 개발 (Spec-First Development) API
 
-                                이 API는 Spring Boot를 학습하기 위한 프로젝트입니다.
+                                이 API는 OpenAPI 명세로부터 자동 생성되었습니다.
+
+                                ## 개발 워크플로우
+                                1. `src/main/resources/openapi/api-spec.yaml` 수정
+                                2. `./gradlew generateApi` 실행
+                                3. 자동 생성된 인터페이스 구현 (Controller)
+                                4. Swagger UI에서 확인 및 테스트
 
                                 ## 주요 기능
-                                - 사용자 관리 (CRUD)
-                                - 계산기 서비스
-
-                                ## 학습 내용
-                                - RESTful API 설계
-                                - Controller-Service-Repository 패턴
-                                - DTO 패턴
-                                - HTTP 메서드 (GET, POST, PUT, PATCH, DELETE)
+                                - ✅ RESTful API (CRUD)
+                                - ✅ 페이징 및 정렬
+                                - ✅ Bean Validation (@Valid)
+                                - ✅ 전역 예외 처리 (@RestControllerAdvice)
+                                - ✅ 트랜잭션 관리 (@Transactional)
+                                - ✅ 단위 테스트 (Mockito)
+                                - ✅ 통합 테스트 (Testcontainers)
 
                                 ## 기술 스택
                                 - Spring Boot 3.2.0
                                 - Java 21
-                                - Gradle
+                                - PostgreSQL 16 + dbmate
+                                - Spring Data JPA
+                                - OpenAPI 3.0.3
                                 """)
                         .contact(new Contact()
                                 .name("학습자")

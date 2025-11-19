@@ -58,3 +58,24 @@ server:
   error:
     include-message: always
     include-stacktrace: never
+
+# ===================================
+# Swagger UI / OpenAPI 설정
+# ===================================
+springdoc:
+  # Swagger UI 경로: http://localhost:8080/swagger-ui.html
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: alpha  # API 알파벳 순 정렬
+    tags-sorter: alpha  # 태그 알파벳 순 정렬
+    display-request-duration: true  # 요청 시간 표시
+
+  # OpenAPI JSON 경로: http://localhost:8080/api-docs
+  api-docs:
+    path: /api-docs
+    enabled: true
+
+  # 기존 OpenAPI 명세 파일 사용
+  # src/main/resources/openapi/api-spec.yaml 파일을 Swagger UI에서 보여줌
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
