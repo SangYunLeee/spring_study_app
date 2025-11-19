@@ -1,238 +1,330 @@
 # 다음 학습 단계
 
-현재까지 Spring Boot의 기본 구조와 간단한 REST API 컨트롤러를 배웠습니다.
-이제 더 실용적인 기능들을 단계별로 학습할 수 있습니다.
+Spring Boot의 핵심 개념들을 체계적으로 학습해왔습니다.
+명세 우선 개발부터 예외 처리, 검증, 트랜잭션, 테스트까지 실무 필수 기능들을 모두 마스터했습니다!
 
-## 현재 학습 수준: 초급 (레벨 1 완료)
+## 현재 학습 수준: 중급 완성 (레벨 1-8 완료) ✨
 
-✅ Spring Boot 프로젝트 생성
-✅ 기본 REST API 컨트롤러 작성
-✅ HTTP GET 요청 처리
-✅ 파라미터 전달 방법 (@RequestParam, @PathVariable)
+✅ Spring Boot 프로젝트 생성 및 기본 구조
+✅ Controller-Service-Repository 계층 분리
+✅ RESTful API 설계 (GET, POST, PUT, PATCH, DELETE)
+✅ 명세 우선 개발 (OpenAPI + Liquibase)
+✅ PostgreSQL + Spring Data JPA 연동
+✅ 전역 예외 처리 (@RestControllerAdvice)
+✅ Bean Validation (@Valid)
+✅ 트랜잭션 관리 (@Transactional)
+✅ 통합 테스트 작성 (@SpringBootTest)
 
 ---
 
 ## 추천 학습 경로
 
-### 레벨 2: 계층 구조와 비즈니스 로직 (초급 → 중급)
+현재 중급 레벨을 완성했으므로, 이제 고급 주제나 실전 프로젝트로 나아갈 수 있습니다!
 
-실제 애플리케이션에서는 컨트롤러에 모든 로직을 넣지 않습니다.
-**Controller → Service → Repository** 구조를 배웁니다.
+### 레벨 9: 단위 테스트 (Mock 사용) (중급 → 고급)
+
+통합 테스트는 완료했으니, 이제 빠른 단위 테스트를 작성해봅니다.
+Mock을 사용하여 각 계층을 독립적으로 테스트합니다.
 
 **Claude Code에게 요청하기:**
 ```
-Service 레이어를 추가해서 비즈니스 로직을 분리하는 방법을 배우고 싶어
+Mockito를 사용한 단위 테스트 작성법을 배우고 싶어
 ```
 
 **배울 내용:**
-- `@Service` 어노테이션
-- 의존성 주입 (Dependency Injection)
-- `@Autowired` vs 생성자 주입
-- 계층 분리의 장점
+- Mockito 기본 사용법
+- @Mock, @InjectMocks 어노테이션
+- when().thenReturn() 패턴
+- Controller, Service 단위 테스트
+- MockMvc를 사용한 Controller 테스트
+- 테스트 커버리지 향상
 
 **실습 예제:**
-- 간단한 계산기 서비스
-- 사용자 정보 관리 서비스
+- UserService 단위 테스트 (Repository Mock)
+- UsersApiController 단위 테스트 (Service Mock)
+- 엣지 케이스 테스트
 
-**예상 소요 시간:** 30-40분
+**예상 소요 시간:** 1-1.5시간
+
+**왜 필요한가?**
+- 통합 테스트는 느림 (DB 연결, Spring 컨텍스트 로딩)
+- 단위 테스트는 빠름 (Mock 객체 사용)
+- TDD (Test-Driven Development) 가능
 
 ---
 
-### 레벨 3: 데이터베이스 연동 (중급)
+### 레벨 10: API 문서 자동화 (Swagger UI) (중급)
 
-메모리가 아닌 데이터베이스에 데이터를 저장하고 조회합니다.
-**JPA (Java Persistence API)**를 사용합니다.
+OpenAPI 명세를 시각화하여 API 문서를 자동 생성합니다.
+프론트엔드 개발자나 다른 팀원이 쉽게 API를 이해할 수 있습니다.
 
 **Claude Code에게 요청하기:**
 ```
-H2 데이터베이스를 연동하고 JPA로 데이터를 저장하는 방법을 배우고 싶어
+Swagger UI로 API 문서를 자동 생성하고 싶어
 ```
 
 **배울 내용:**
-- H2 인메모리 데이터베이스 설정
-- `@Entity` - 데이터베이스 테이블 매핑
-- `@Repository` - 데이터 접근 계층
-- JpaRepository 인터페이스
-- CRUD 기본 연산 (Create, Read, Update, Delete)
+- Springdoc OpenAPI 라이브러리
+- Swagger UI 설정
+- API 명세 기반 문서 자동 생성
+- 브라우저에서 API 테스트
 
 **실습 예제:**
-- 사용자(User) 엔티티 생성
-- 사용자 저장/조회/수정/삭제 API
+- Swagger UI 설정
+- /swagger-ui.html 접속
+- 브라우저에서 직접 API 호출
 
-**예상 소요 시간:** 45-60분
+**예상 소요 시간:** 30-45분
+
+**장점:**
+- 명세(api-spec.yaml)만 작성하면 문서 자동 생성
+- 팀원들과 API 공유 용이
+- Postman 대신 브라우저에서 테스트 가능
 
 ---
 
-### 레벨 4: 다양한 HTTP 메서드 (중급)
+### 레벨 11: Spring Security 기본 (인증) (고급)
 
-GET 외에 POST, PUT, DELETE를 사용하여 RESTful API를 만듭니다.
+실제 서비스는 로그인/회원가입이 필요합니다.
+Spring Security로 기본적인 인증을 구현합니다.
 
 **Claude Code에게 요청하기:**
 ```
-POST, PUT, DELETE 요청을 처리하는 RESTful API를 만들고 싶어
+Spring Security로 로그인 기능을 구현하고 싶어
 ```
 
 **배울 내용:**
-- `@PostMapping` - 데이터 생성
-- `@PutMapping` - 데이터 수정
-- `@DeleteMapping` - 데이터 삭제
-- `@RequestBody` - JSON 요청 본문 받기
-- HTTP 상태 코드 (200, 201, 204, 404 등)
-- ResponseEntity 사용
+- Spring Security 기본 개념
+- 비밀번호 암호화 (BCrypt)
+- 로그인/회원가입 API
+- JWT 토큰 기반 인증 (또는 세션 기반)
+- SecurityFilterChain 설정
 
 **실습 예제:**
-- TODO 앱 API (할 일 추가/수정/삭제)
-- 블로그 게시글 API
+- 회원가입 API (비밀번호 암호화)
+- 로그인 API (JWT 발급)
+- 인증이 필요한 API 보호
 
-**예상 소요 시간:** 40-50분
+**예상 소요 시간:** 2-3시간
+
+**주의:**
+- Spring Security는 복잡함
+- 차근차근 단계별로 진행 필요
 
 ---
 
-### 레벨 5: 데이터 유효성 검증 (중급)
+### 레벨 12: 관계형 데이터 모델링 (중급 → 고급)
 
-사용자가 보낸 데이터가 올바른지 검증합니다.
+현재는 User 엔티티 하나만 있습니다.
+실제 서비스는 여러 엔티티 간의 관계가 필요합니다.
 
 **Claude Code에게 요청하기:**
 ```
-입력 데이터의 유효성을 검증하는 방법을 배우고 싶어
+JPA 연관관계 매핑을 배우고 싶어. 게시글과 댓글 예제로 시작하자
 ```
 
 **배울 내용:**
-- `@Valid` 어노테이션
-- `@NotNull`, `@NotBlank`, `@Size` 등
-- `@Email`, `@Min`, `@Max` 등
-- BindingResult로 에러 처리
-- 커스텀 Validator 작성
+- @OneToMany, @ManyToOne
+- @ManyToMany, @OneToOne
+- 양방향 vs 단방향 관계
+- FetchType (LAZY, EAGER)
+- orphanRemoval, cascade 옵션
+- N+1 문제와 해결 방법
 
 **실습 예제:**
-- 회원가입 폼 유효성 검증
-- 이메일, 비밀번호 형식 검증
+1. **게시글 + 댓글**
+   - Post (1) : Comment (N)
+   - 게시글 조회 시 댓글 목록 함께 조회
 
-**예상 소요 시간:** 30-40분
+2. **사용자 + 게시글**
+   - User (1) : Post (N)
+   - 작성자 정보 포함
+
+3. **게시글 + 태그**
+   - Post (N) : Tag (N)
+   - 다대다 관계
+
+**예상 소요 시간:** 2-3시간
 
 ---
 
-### 레벨 6: 예외 처리 (중급 → 고급)
+### 레벨 13: 성능 최적화 (고급)
 
-에러가 발생했을 때 적절한 응답을 반환합니다.
+실전에서는 성능이 중요합니다.
+쿼리 최적화, 캐싱, 인덱싱 등을 배웁니다.
 
 **Claude Code에게 요청하기:**
 ```
-전역 예외 처리를 구현하고 싶어
+N+1 문제를 해결하고 쿼리 성능을 최적화하고 싶어
 ```
 
 **배울 내용:**
-- `@ExceptionHandler` - 메서드 레벨 예외 처리
-- `@ControllerAdvice` - 전역 예외 처리
-- 커스텀 예외 클래스 작성
-- 에러 응답 포맷 통일
+- N+1 문제 이해 및 해결 (fetch join, @EntityGraph)
+- 쿼리 로그 분석
+- DB 인덱스 설계 (Liquibase)
+- Spring Cache (@Cacheable)
+- 페이징 최적화
 
 **실습 예제:**
-- 404 Not Found 예외 처리
-- 400 Bad Request 예외 처리
-- 커스텀 에러 응답 만들기
+- N+1 발생 코드 → fetch join으로 해결
+- 자주 조회되는 데이터 캐싱
+- 검색 성능을 위한 인덱스 추가
 
-**예상 소요 시간:** 35-45분
+**예상 소요 시간:** 2-3시간
 
 ---
 
-### 레벨 7: 실전 프로젝트 (고급)
+## 실전 프로젝트 (종합)
 
-배운 내용을 종합하여 완전한 애플리케이션을 만듭니다.
+배운 내용을 모두 활용하여 완전한 애플리케이션을 만들어봅니다.
+
+### 프로젝트 아이디어 1: 블로그 플랫폼
 
 **Claude Code에게 요청하기:**
 ```
-배운 내용을 종합해서 간단한 블로그 API를 만들고 싶어
+배운 내용을 종합해서 블로그 플랫폼을 만들고 싶어
 ```
 
-또는
+**기능:**
+1. 회원가입/로그인 (Spring Security + JWT)
+2. 게시글 CRUD (User ↔ Post 관계)
+3. 댓글 기능 (Post ↔ Comment 관계)
+4. 태그/카테고리 (ManyToMany 관계)
+5. 페이징 및 검색
+6. 이미지 업로드
+7. 좋아요 기능
 
+**활용 기술:**
+- 명세 우선 개발 (OpenAPI + Liquibase)
+- 전역 예외 처리
+- Bean Validation
+- 트랜잭션 관리
+- 통합 테스트 + 단위 테스트
+- Swagger UI 문서화
+
+---
+
+### 프로젝트 아이디어 2: TODO 관리 + 팀 협업
+
+**Claude Code에게 요청하기:**
 ```
-TODO 관리 애플리케이션을 만들고 싶어
+팀 협업 기능이 있는 TODO 관리 앱을 만들고 싶어
 ```
 
-**만들 수 있는 프로젝트:**
-1. **블로그 API**
-   - 게시글 CRUD
-   - 댓글 기능
-   - 카테고리 관리
+**기능:**
+1. 회원가입/로그인
+2. 개인 TODO 관리
+3. 팀 생성 및 공유 TODO
+4. 담당자 할당
+5. 마감일 알림
+6. 완료율 통계
 
-2. **TODO 앱**
-   - 할 일 추가/수정/삭제
-   - 완료/미완료 상태 관리
-   - 날짜별 필터링
+**활용 기술:**
+- User ↔ Team (ManyToMany)
+- Team ↔ Todo (OneToMany)
+- User ↔ Todo (ManyToOne, 담당자)
+- 복잡한 쿼리 최적화
 
-3. **간단한 쇼핑몰 API**
-   - 상품 관리
-   - 장바구니
-   - 주문 처리
+---
 
-**예상 소요 시간:** 1-2시간
+### 프로젝트 아이디어 3: 간단한 쇼핑몰 API
+
+**Claude Code에게 요청하기:**
+```
+간단한 쇼핑몰 백엔드를 만들고 싶어
+```
+
+**기능:**
+1. 상품 관리 (CRUD)
+2. 장바구니 (User ↔ Cart ↔ Product)
+3. 주문 처리 (Order ↔ OrderItem)
+4. 결제 연동 (외부 API)
+5. 재고 관리 (트랜잭션)
+6. 주문 통계
 
 ---
 
 ## 추가 고급 주제 (선택 사항)
 
-이후에 더 깊이 배우고 싶다면:
+더 깊이 배우고 싶다면:
 
-### 보안
+### 배포 및 DevOps
 ```
-Spring Security로 로그인 인증을 구현하고 싶어
+Docker로 애플리케이션을 배포하고 싶어
 ```
-- JWT 토큰 인증
-- 비밀번호 암호화
-- 권한 관리
-
-### 테스트
-```
-단위 테스트와 통합 테스트 작성법을 배우고 싶어
-```
-- JUnit 5
-- MockMvc
-- @SpringBootTest
+- Dockerfile 작성
+- Docker Compose (App + PostgreSQL)
+- AWS/GCP 배포
+- CI/CD (GitHub Actions)
 
 ### 외부 API 연동
 ```
 외부 API를 호출하는 방법을 배우고 싶어
 ```
-- RestTemplate
-- WebClient
-- 날씨 API, 지도 API 연동
+- RestTemplate vs WebClient
+- 날씨 API 연동 예제
+- OAuth 2.0 소셜 로그인 (Google, Kakao)
+- 결제 API (Stripe, Toss Payments)
 
-### 파일 업로드
+### 파일 업로드/다운로드
 ```
 파일 업로드 기능을 구현하고 싶어
 ```
 - MultipartFile
 - 이미지 업로드/다운로드
-- 파일 저장 전략
+- AWS S3 연동
+- 파일 저장 전략 (로컬 vs 클라우드)
+
+### 비동기 처리
+```
+비동기 작업 처리를 배우고 싶어
+```
+- @Async 어노테이션
+- CompletableFuture
+- 이메일 발송 (비동기)
+- 대용량 데이터 처리
+
+### 메시징 시스템
+```
+메시징 큐를 사용하고 싶어
+```
+- RabbitMQ 또는 Kafka
+- 이벤트 기반 아키텍처
+- 주문 처리 비동기화
 
 ---
 
 ## 학습 팁
 
-### 1. 순서대로 진행하세요
-- 레벨 2 → 레벨 3 → 레벨 4 순서로 진행하는 것을 권장합니다
-- 각 레벨의 내용이 다음 레벨의 기초가 됩니다
+### 1. 현재 수준에 맞는 주제 선택
+- ✅ **완료**: 레벨 1-8 (기본 → 중급)
+- 🎯 **추천**: 레벨 9 (단위 테스트) 또는 레벨 10 (Swagger UI)
+- ⚠️ **나중에**: 레벨 11+ (고급 주제)
 
 ### 2. 실습 중심으로 배우세요
 - 개념만 읽지 말고 직접 코드를 작성해보세요
 - 에러가 나면 해결 과정에서 더 많이 배웁니다
+- 테스트 코드를 작성하면 이해도가 높아집니다
 
 ### 3. Claude Code 활용하기
 - 막히는 부분이 있으면 언제든지 질문하세요:
   ```
-  @Service 어노테이션이 정확히 무슨 역할을 하는지 설명해줘
+  @Transactional의 readOnly 옵션이 정확히 어떤 최적화를 하는지 설명해줘
   ```
 
 - 코드 설명 요청:
   ```
-  이 코드가 어떻게 동작하는지 한 줄씩 설명해줘
+  GlobalExceptionHandler가 어떻게 동작하는지 한 줄씩 설명해줘
   ```
 
 - 에러 해결:
   ```
-  이 에러가 왜 발생했는지 설명하고 해결 방법을 알려줘
+  MethodArgumentNotValidException이 왜 발생했는지 설명하고 해결 방법을 알려줘
+  ```
+
+- 리팩토링:
+  ```
+  이 코드를 더 깔끔하게 리팩토링해줘
   ```
 
 ### 4. 학습 기록 남기기
@@ -240,6 +332,11 @@ Spring Security로 로그인 인증을 구현하고 싶어
   ```
   LEARNING_LOG.md에 오늘 배운 내용을 추가해줘
   ```
+
+### 5. 명세 우선 개발 유지
+- API 변경 시: `api-spec.yaml` 먼저 수정 → `./gradlew generateApi`
+- DB 변경 시: Liquibase changeset 작성 → `./gradlew bootRun`
+- 코드를 먼저 수정하지 마세요!
 
 ---
 
@@ -260,24 +357,70 @@ NEXT_STEPS.md를 보고 다음 학습할 내용을 추천해줘
 또는 직접 원하는 주제 선택:
 
 ```
-레벨 2의 Service 레이어를 배우고 싶어. 시작해줘
+레벨 9의 단위 테스트를 배우고 싶어. Mockito 사용법을 알려줘
 ```
 
 ---
 
 ## 현재 추천 학습 주제
 
-현재 수준에서는 **레벨 2: Service 레이어** 를 먼저 배우는 것을 강력히 추천합니다.
+### 🎯 가장 추천: 레벨 9 (단위 테스트)
 
-이유:
-1. 실제 프로젝트에서 가장 많이 사용되는 패턴
-2. 데이터베이스 연동 전에 구조를 이해해야 함
-3. 코드 구조와 관심사 분리의 중요성 학습
-4. 의존성 주입이라는 Spring의 핵심 개념 이해
+통합 테스트는 작성했지만, 단위 테스트는 아직 없습니다.
+Mock을 사용한 빠른 테스트 작성법을 배우는 것을 추천합니다.
 
 **시작하려면:**
 ```
-Service 레이어를 추가해서 비즈니스 로직을 분리하는 방법을 배우고 싶어
+Mockito를 사용한 단위 테스트 작성법을 배우고 싶어
 ```
 
-행복한 Spring 학습 되세요! 🌱
+**이유:**
+1. 실무에서 단위 테스트는 필수
+2. 통합 테스트는 느림 → 단위 테스트로 보완
+3. TDD (테스트 주도 개발) 가능
+4. 리팩토링 시 안전망 역할
+
+---
+
+### 🎨 또는: 레벨 10 (Swagger UI)
+
+API 문서를 자동 생성하여 팀원들과 공유하고 싶다면:
+
+**시작하려면:**
+```
+Swagger UI로 API 문서를 자동 생성하고 싶어
+```
+
+**이유:**
+1. OpenAPI 명세를 시각화
+2. 브라우저에서 API 테스트 가능
+3. 프론트엔드 개발자와 협업 용이
+4. 빠르게 완성 가능 (30-45분)
+
+---
+
+## 이미 구현된 기능 (복습용)
+
+현재 프로젝트에는 이미 많은 기능이 구현되어 있습니다:
+
+- ✅ **명세 우선 개발**: OpenAPI 명세 → 코드 자동 생성
+- ✅ **DB 스키마 관리**: Liquibase changeset
+- ✅ **전역 예외 처리**: @RestControllerAdvice
+- ✅ **자동 검증**: @Valid + Bean Validation
+- ✅ **트랜잭션 관리**: @Transactional (readOnly 최적화)
+- ✅ **페이징**: Spring Data JPA Pageable
+- ✅ **통합 테스트**: @SpringBootTest + 실제 DB
+
+**실행 방법:**
+```bash
+# 1. PostgreSQL 시작
+docker compose up -d
+
+# 2. 애플리케이션 실행
+./gradlew bootRun
+
+# 3. API 테스트
+curl http://localhost:8080/api/users
+```
+
+행복한 Spring 학습 되세요! 🚀

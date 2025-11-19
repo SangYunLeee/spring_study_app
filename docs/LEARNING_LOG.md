@@ -752,30 +752,287 @@ OpenAPI 명세 (API)  ↔  Liquibase 명세 (DB)
 
 ---
 
+---
+
+### 세션 6: 전역 예외 처리 (@RestControllerAdvice) (2025-11-19)
+
+#### 학습 목표
+- 커스텀 예외 클래스 작성
+- @RestControllerAdvice로 전역 예외 처리
+- HTTP 상태 코드별 예외 처리
+- 일관된 에러 응답 형식 구축
+
+#### 완료한 작업
+
+1. **커스텀 예외 클래스 작성**
+   - [UserNotFoundException.java](src/main/java/com/example/springbasic/exception/UserNotFoundException.java) - 404 에러용
+   - [DuplicateEmailException.java](src/main/java/com/example/springbasic/exception/DuplicateEmailException.java) - 중복 이메일용
+   - [InvalidUserDataException.java](src/main/java/com/example/springbasic/exception/InvalidUserDataException.java) - 잘못된 데이터용
+
+2. **에러 응답 DTO 작성**
+   - [ErrorResponse.java](src/main/java/com/example/springbasic/dto/ErrorResponse.java)
+   - 일관된 에러 응답 형식 (status, error, message, path)
+
+3. **전역 예외 처리기 구현**
+   - [GlobalExceptionHandler.java](src/main/java/com/example/springbasic/exception/GlobalExceptionHandler.java)
+   - @RestControllerAdvice 사용
+   - 예외 타입별 @ExceptionHandler 메서드 작성
+
+4. **Service 계층 개선**
+   - IllegalArgumentException → 커스텀 예외로 교체
+   - 명확한 예외 타입 사용
+
+#### 학습한 핵심 개념
+
+**@RestControllerAdvice:**
+```java
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleUserNotFound(...) {
+        // 404 Not Found 반환
+    }
+}
+```
+- 모든 @RestController의 예외를 한 곳에서 처리
+- Controller에서 try-catch 불필요
+- 일관된 에러 응답 형식 보장
+
+**커스텀 예외:**
+```java
+public class UserNotFoundException extends RuntimeException {
+    public UserNotFoundException(Long id) {
+        super("사용자를 찾을 수 없습니다. ID: " + id);
+    }
+}
+```
+
+**에러 응답 형식:**
+```json
+{
+  "status": 404,
+  "error": "Not Found",
+  "message": "사용자를 찾을 수 없습니다. ID: 1",
+  "path": "/api/users/1"
+}
+```
+
+#### 핵심 깨달음
+
+1. **Controller가 깔끔해진다**: try-catch 블록 제거
+2. **일관된 에러 응답**: 모든 API에서 동일한 형식
+3. **예외의 의미가 명확**: UserNotFoundException vs IllegalArgumentException
+4. **유지보수 용이**: 에러 처리 로직이 한 곳에 집중
+
+---
+
+### 세션 7: Bean Validation (@Valid) (2025-11-19)
+
+#### 학습 목표
+- Bean Validation 사용법 이해
+- @Valid로 DTO 자동 검증
+- 커스텀 검증 메시지 작성
+- 검증 실패 시 에러 응답
+
+#### 완료한 작업
+
+1. **DTO에 검증 어노테이션 추가**
+   - OpenAPI 명세에 validation 규칙 정의
+   - 자동 생성된 DTO에 검증 어노테이션 포함
+   - @NotBlank, @Email, @Min, @Max 등 사용
+
+2. **Controller에 @Valid 적용**
+   - [UsersApiController.java](src/main/java/com/example/springbasic/controller/UsersApiController.java)에서 자동 생성된 인터페이스 구현
+   - @Valid 어노테이션으로 요청 검증
+
+3. **검증 실패 처리**
+   - [GlobalExceptionHandler.java](src/main/java/com/example/springbasic/exception/GlobalExceptionHandler.java)
+   - MethodArgumentNotValidException 처리
+   - 검증 오류 메시지 포맷팅
+
+#### 학습한 핵심 개념
+
+**Bean Validation 어노테이션:**
+```java
+public class CreateUserRequestDto {
+    @NotBlank(message = "이름은 필수입니다")
+    private String name;
+
+    @Email(message = "올바른 이메일 형식이 아닙니다")
+    @NotBlank(message = "이메일은 필수입니다")
+    private String email;
+
+    @Min(value = 1, message = "나이는 1 이상이어야 합니다")
+    @Max(value = 150, message = "나이는 150 이하여야 합니다")
+    private Integer age;
+}
+```
+
+**@Valid 사용:**
+```java
+@PostMapping
+public ResponseEntity<UserResponse> createUser(
+    @Valid @RequestBody CreateUserRequest request
+) {
+    // 검증 통과 시에만 실행됨
+}
+```
+
+**검증 실패 처리:**
+```java
+@ExceptionHandler(MethodArgumentNotValidException.class)
+public ResponseEntity<ErrorResponse> handleValidationException(...) {
+    String errors = ex.getBindingResult()
+        .getFieldErrors()
+        .stream()
+        .map(error -> error.getField() + ": " + error.getDefaultMessage())
+        .collect(Collectors.joining(", "));
+    // 400 Bad Request 반환
+}
+```
+
+#### 핵심 깨달음
+
+1. **검증 로직이 선언적**: if문 대신 어노테이션
+2. **재사용 가능**: 같은 DTO를 여러 곳에서 사용 가능
+3. **명세 기반 검증**: OpenAPI 명세에서 자동 생성
+4. **에러 메시지 통일**: 일관된 검증 에러 형식
+
+---
+
+### 세션 8: 트랜잭션 관리 및 통합 테스트 (2025-11-19)
+
+#### 학습 목표
+- @Transactional 어노테이션 이해
+- 트랜잭션 경계와 롤백
+- readOnly 최적화
+- Spring Boot 통합 테스트 작성
+
+#### 완료한 작업
+
+1. **Service에 트랜잭션 적용**
+   - [UserService.java](src/main/java/com/example/springbasic/service/UserService.java)
+   - 쓰기 작업: @Transactional
+   - 읽기 작업: @Transactional(readOnly = true)
+
+2. **통합 테스트 작성**
+   - [UserServiceIntegrationTest.java](src/test/java/com/example/springbasic/service/UserServiceIntegrationTest.java)
+   - @SpringBootTest로 실제 DB 테스트
+   - 트랜잭션 롤백 검증
+
+3. **페이징 기능 추가**
+   - getAllUsers(Pageable) 메서드 추가
+   - PagedUserResponse DTO 생성
+   - Spring Data JPA Pageable 활용
+
+4. **테스트용 설정 추가**
+   - [application-test.yml](src/test/resources/application-test.yml)
+   - 테스트 전용 DB 설정
+
+#### 학습한 핵심 개념
+
+**@Transactional의 역할:**
+```java
+@Transactional
+public User createUser(String name, String email, int age) {
+    // 1. 중복 이메일 체크 (조회)
+    if (userRepository.findByEmail(email).isPresent()) {
+        throw new DuplicateEmailException(email);
+    }
+    // 2. 저장
+    return userRepository.save(newUser);
+    // 예외 발생 시 자동 롤백!
+}
+```
+- 메서드 전체가 하나의 트랜잭션
+- 중간에 예외 발생 시 모든 변경사항 롤백
+- ACID 속성 보장
+
+**readOnly 최적화:**
+```java
+@Transactional(readOnly = true)
+public User getUserById(Long id) {
+    return userRepository.findById(id)
+        .orElseThrow(() -> new UserNotFoundException(id));
+}
+```
+- 읽기 전용 명시 → DB 최적화
+- flush 생략 가능
+- 성능 향상
+
+**Spring Data JPA 페이징:**
+```java
+// Service
+public Page<User> getAllUsers(Pageable pageable) {
+    return userRepository.findAll(pageable);
+}
+
+// Controller
+Pageable pageable = PageRequest.of(page, size, Sort.by("name").ascending());
+Page<User> userPage = userService.getAllUsers(pageable);
+```
+
+**통합 테스트:**
+```java
+@SpringBootTest  // 전체 Spring 컨텍스트 로드
+class UserServiceIntegrationTest {
+    @Autowired
+    private UserService userService;
+
+    @Test
+    void createUser_Success() {
+        User user = userService.createUser("홍길동", "hong@example.com", 25);
+        assertThat(user.getId()).isNotNull();  // 실제 DB에서 ID 생성됨
+    }
+}
+```
+
+#### 핵심 깨달음
+
+1. **트랜잭션은 Service 계층**: Controller X, Repository X
+2. **readOnly는 성능 최적화**: 읽기 작업에 필수
+3. **통합 테스트로 전체 검증**: Mock 대신 실제 DB 사용
+4. **페이징으로 대용량 데이터 처리**: 성능 문제 방지
+
+---
+
 ## 업데이트된 학습 통계
 
-- **총 학습 세션**: 5회
-- **생성한 파일 수**: 25개 이상
-- **구현한 API 엔드포인트**: 7개 (RESTful)
+- **총 학습 세션**: 8회
+- **생성한 파일 수**: 30개 이상
+- **구현한 API 엔드포인트**: 9개 (RESTful + 페이징)
 - **학습한 어노테이션**:
-  - Spring: @SpringBootApplication, @RestController, @Service, @Repository, @GetMapping, @PostMapping, @PutMapping, @PatchMapping, @DeleteMapping, @RequestParam, @PathVariable, @RequestBody
+  - Spring: @SpringBootApplication, @RestController, @Service, @Repository, @GetMapping, @PostMapping, @PutMapping, @PatchMapping, @DeleteMapping, @RequestParam, @PathVariable, @RequestBody, @RestControllerAdvice, @ExceptionHandler, @Valid
   - JPA: @Entity, @Table, @Id, @GeneratedValue, @Column, @PrePersist, @PreUpdate
+  - Transaction: @Transactional
+  - Validation: @NotNull, @NotBlank, @Email, @Min, @Max, @Size
+  - Test: @SpringBootTest, @Test, @DisplayName, @AfterEach
 - **학습한 디자인 패턴**:
   - Layered Architecture (계층 구조)
   - Dependency Injection (의존성 주입)
   - DTO Pattern (데이터 전송 객체)
   - Repository Pattern (데이터 접근 추상화)
   - Specification-First Development (명세 우선 개발)
+  - Global Exception Handling (전역 예외 처리)
 - **학습한 도구**:
   - OpenAPI Generator (API 코드 생성)
   - Liquibase (DB 스키마 버전 관리)
   - PostgreSQL (관계형 데이터베이스)
   - Docker Compose (컨테이너 오케스트레이션)
   - Spring Data JPA (ORM)
+  - JUnit 5 (테스트 프레임워크)
+  - AssertJ (테스트 assertion 라이브러리)
 - **완료한 레벨**:
   - ✅ 레벨 1: Spring Boot 기본
   - ✅ 레벨 2: Service 레이어
   - ✅ 레벨 3: RESTful API
   - ✅ 레벨 4: 명세 우선 개발 (API)
   - ✅ 레벨 5: 명세 우선 개발 (DB)
-- **다음 학습 주제**: 유효성 검증, 예외 처리, 트랜잭션, 테스트 작성
+  - ✅ 레벨 6: 전역 예외 처리
+  - ✅ 레벨 7: Bean Validation
+  - ✅ 레벨 8: 트랜잭션 & 통합 테스트
+- **다음 학습 주제**:
+  - 단위 테스트 (Mock 사용)
+  - Spring Security (인증/인가)
+  - API 문서화 자동화
+  - 배포 (Docker, CI/CD)
