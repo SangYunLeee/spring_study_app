@@ -56,4 +56,14 @@ public interface CommentRepositoryCustom {
      * BooleanBuilder 사용
      */
     List<Comment> searchComments(String content, Long postId, Long authorId);
+
+    /**
+     * QueryDSL: 게시글 ID로 댓글 조회 (Fetch Join - 작성자만)
+     *
+     * 기존 JPQL:
+     * <pre>
+     * @Query("SELECT c FROM Comment c JOIN FETCH c.author WHERE c.post.id = :postId ORDER BY c.createdAt ASC")
+     * </pre>
+     */
+    List<Comment> findByPostIdWithAuthorUsingQueryDsl(Long postId);
 }

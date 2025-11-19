@@ -125,4 +125,27 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
                 .orderBy(comment.createdAt.desc())
                 .fetch();
     }
+
+    /**
+     * QueryDSL: 게시글 ID로 댓글 조회 (Fetch Join - 작성자만)
+     *
+     * JPQL 대체:
+     * - @Query("SELECT c FROM Comment c JOIN FETCH c.author WHERE c.post.id = :postId ORDER BY c.createdAt ASC")
+     *
+     * 차이점:
+     * - Post는 Fetch Join 안 함 (필요 없는 경우)
+     * - Author만 Fetch Join
+     */
+    @Override
+    public List<Comment> findByPostIdWithAuthorUsingQueryDsl(Long postId) {
+        QComment comment = QComment.comment;
+        QUser user = QUser.user;
+
+        return queryFactory
+                .selectFrom(comment)
+                .join(comment.author, user).fetchJoin()  // Author만 Fetch Join
+                .where(comment.post.id.eq(postId))       // WHERE 조건
+                .orderBy(comment.createdAt.asc())        // ORDER BY
+                .fetch();
+    }
 }

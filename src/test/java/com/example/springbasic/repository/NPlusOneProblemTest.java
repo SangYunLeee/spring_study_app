@@ -148,12 +148,12 @@ class NPlusOneProblemTest {
 
     @Test
     @Transactional
-    @DisplayName("N+1 문제 해결 - 댓글 Fetch Join")
+    @DisplayName("N+1 문제 해결 - 댓글 Fetch Join (QueryDSL)")
     void nPlusOneProblem_Comments_Solved() {
-        System.out.println("\n========== 댓글 Fetch Join ==========");
+        System.out.println("\n========== 댓글 Fetch Join (QueryDSL) ==========");
 
-        // When: Fetch Join으로 댓글 + 작성자 조회
-        List<Comment> comments = commentRepository.findByPostIdWithAuthor(post1.getId());
+        // When: Fetch Join으로 댓글 + 작성자 조회 (QueryDSL 사용)
+        List<Comment> comments = commentRepository.findByPostIdWithAuthorUsingQueryDsl(post1.getId());
 
         System.out.println("\n========== 데이터 접근 ==========");
 
