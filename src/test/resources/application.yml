@@ -1,0 +1,61 @@
+spring:
+  application:
+    name: spring-basic-app-test
+
+  # ===================================
+  # 테스트 데이터베이스 설정
+  # ===================================
+  # 옵션 1: 메인 DB와 동일 (현재 사용 중)
+  # - 장점: 실제 환경과 동일
+  # - 단점: 테스트 데이터가 메인 DB를 오염시킬 수 있음
+  # ===================================
+  datasource:
+    url: jdbc:postgresql://localhost:15432/springbasic
+    username: springuser
+    password: springpass
+    driver-class-name: org.postgresql.Driver
+
+    hikari:
+      maximum-pool-size: 5  # 테스트는 적은 커넥션으로 충분
+      minimum-idle: 2
+      connection-timeout: 30000
+
+  # ===================================
+  # JPA / Hibernate 설정 (테스트 전용)
+  # ===================================
+  jpa:
+    hibernate:
+      # 테스트 시에는 create-drop 사용 가능 (테스트 후 모든 테이블 삭제)
+      # 하지만 현재는 Liquibase를 사용하므로 validate 유지
+      ddl-auto: validate
+
+    # 테스트에서는 SQL 로그를 덜 출력 (가독성)
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+# ===================================
+# 로깅 설정 (테스트는 간결하게)
+# ===================================
+logging:
+  level:
+    # 테스트 실행 시 로그 레벨을 높여서 불필요한 출력 줄임
+    org.hibernate.SQL: INFO  # DEBUG → INFO
+    org.hibernate.type.descriptor.sql.BasicBinder: INFO  # TRACE → INFO
+    com.example.springbasic: INFO  # DEBUG → INFO
+    org.springframework: WARN  # Spring 프레임워크 로그 최소화
+
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+# ===================================
+# 서버 설정
+# ===================================
+server:
+  # 테스트에서는 랜덤 포트 사용 (포트 충돌 방지)
+  port: 0  # 0 = 랜덤 포트
+  error:
+    include-message: always
+    include-stacktrace: on-param  # 테스트에서만 스택트레이스 활성화
