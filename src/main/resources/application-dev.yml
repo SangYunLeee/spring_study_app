@@ -17,3 +17,8 @@ logging:
   level:
     com.example.springbasic: DEBUG
     org.hibernate.SQL: DEBUG
+
+# JWT 설정 (개발 환경용)
+jwt:
+  secret: dev-secret-key-for-testing-do-not-use-in-production-256bit
+  expiration: 86400000  # 24시간

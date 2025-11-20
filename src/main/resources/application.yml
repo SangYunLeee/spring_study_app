@@ -79,3 +79,14 @@ springdoc:
   # src/main/resources/openapi/api-spec.yaml 파일을 Swagger UI에서 보여줌
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
+
+# ===================================
+# JWT 설정
+# ===================================
+jwt:
+  # JWT 서명에 사용할 비밀 키 (최소 256비트 권장)
+  # 프로덕션 환경에서는 환경 변수로 관리 필수!
+  secret: your-256-bit-secret-key-change-this-in-production-environment-please
+  # JWT 토큰 만료 시간 (밀리초)
+  # 86400000ms = 24시간
+  expiration: 86400000

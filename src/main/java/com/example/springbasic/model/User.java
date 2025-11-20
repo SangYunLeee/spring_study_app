@@ -1,28 +1,36 @@
 package com.example.springbasic.model;
 
 import jakarta.persistence.*;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
 /**
- * 사용자 정보를 담는 JPA Entity
+ * 사용자 정보를 담는 JPA Entity + Spring Security UserDetails
  *
  * DB 명세와 매핑:
- * - dbmate 마이그레이션(20250101000001_create_users_table.sql)에 정의된 테이블 구조
+ * - dbmate 마이그레이션에 정의된 테이블 구조
  * - 테이블명: users
- * - 컬럼: id, name, email, age, created_at, updated_at
+ * - 컬럼: id, name, email, age, password, role, created_at, updated_at
  *
  * 계층 분리:
  * - 도메인 모델 (Service, Repository에서 사용)
  * - API 모델과 분리 (Controller에서 변환)
+ *
+ * Spring Security 통합:
+ * - UserDetails 인터페이스 구현 (인증/인가)
  *
  * 상속:
  * - BaseEntity: id, createdAt, updatedAt 공통 필드
  */
 @Entity
 @Table(name = "users")
-public class User extends BaseEntity {
+public class User extends BaseEntity implements UserDetails {
 
     @Column(name = "name", nullable = false, length = 100)
     private String name;
@@ -32,6 +40,23 @@ public class User extends BaseEntity {
 
     @Column(name = "age", nullable = false)
     private Integer age;
+
+    /**
+     * 비밀번호 (BCrypt 암호화)
+     * - 최소 8자 이상 권장
+     * - BCryptPasswordEncoder로 암호화하여 저장
+     */
+    @Column(name = "password", nullable = false, length = 255)
+    private String password;
+
+    /**
+     * 사용자 권한
+     * - USER: 일반 사용자
+     * - ADMIN: 관리자
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false, length = 20)
+    private Role role = Role.USER;
 
     // ========== 연관관계: Post (작성한 게시글 목록) ==========
 
@@ -86,6 +111,12 @@ public class User extends BaseEntity {
         if (request.age() != null) {
             this.age = request.age();
         }
+        if (request.password() != null) {
+            this.password = request.password();
+        }
+        if (request.role() != null) {
+            this.role = request.role();
+        }
     }
 
     /**
@@ -110,10 +141,12 @@ public class User extends BaseEntity {
     public record UpdateRequest(
             String name,
             String email,
-            Integer age
+            Integer age,
+            String password,  // BCrypt 암호화된 비밀번호
+            Role role
     ) {
-        public static UpdateRequest of(String name, String email, Integer age) {
-            return new UpdateRequest(name, email, age);
+        public static UpdateRequest of(String name, String email, Integer age, String password, Role role) {
+            return new UpdateRequest(name, email, age, password, role);
         }
     }
 
@@ -131,12 +164,99 @@ public class User extends BaseEntity {
         return age;
     }
 
+    public Role getRole() {
+        return role;
+    }
+
     /**
      * 작성한 게시글 목록 조회
      * - 읽기 전용으로 반환 (외부에서 직접 수정 방지)
      */
     public List<Post> getPosts() {
         return new ArrayList<>(posts);
+    }
+
+    // ========== UserDetails 구현 (Spring Security) ==========
+
+    /**
+     * 사용자의 권한 목록 반환
+     * - Spring Security가 인가(Authorization)에 사용
+     * - Role enum의 authority를 GrantedAuthority로 변환
+     */
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority(role.getAuthority()));
+    }
+
+    /**
+     * 비밀번호 반환
+     * - BCrypt로 암호화된 값
+     * - Spring Security가 인증(Authentication)에 사용
+     */
+    @Override
+    public String getPassword() {
+        return password;
+    }
+
+    /**
+     * 사용자명 반환
+     * - 이 프로젝트에서는 email을 username으로 사용
+     * - Spring Security가 인증에 사용
+     */
+    @Override
+    public String getUsername() {
+        return email;
+    }
+
+    /**
+     * 계정 만료 여부
+     * - true: 계정이 만료되지 않음
+     * - false: 계정이 만료됨 (로그인 불가)
+     *
+     * 현재는 항상 true (만료 기능 미사용)
+     */
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    /**
+     * 계정 잠금 여부
+     * - true: 계정이 잠기지 않음
+     * - false: 계정이 잠김 (로그인 불가)
+     *
+     * 현재는 항상 true (잠금 기능 미사용)
+     * 실무에서는 로그인 실패 횟수 제한 등에 활용
+     */
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    /**
+     * 비밀번호 만료 여부
+     * - true: 비밀번호가 만료되지 않음
+     * - false: 비밀번호가 만료됨 (변경 필요)
+     *
+     * 현재는 항상 true (만료 기능 미사용)
+     * 실무에서는 90일마다 비밀번호 변경 등에 활용
+     */
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    /**
+     * 계정 활성화 여부
+     * - true: 계정이 활성화됨
+     * - false: 계정이 비활성화됨 (로그인 불가)
+     *
+     * 현재는 항상 true (활성화 상태)
+     * 실무에서는 이메일 인증, 관리자 승인 등에 활용
+     */
+    @Override
+    public boolean isEnabled() {
+        return true;
     }
 
     // ========== 연관관계 편의 메서드 ==========

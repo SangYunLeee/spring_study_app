@@ -26,6 +26,14 @@ dependencies {
     // Spring Validation - Bean Validation (@Valid, @NotNull 등)
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
+    // Spring Security - 인증/인가
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // JWT - 토큰 기반 인증
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.3'
+
     // PostgreSQL - 데이터베이스 드라이버
     runtimeOnly 'org.postgresql:postgresql:42.7.1'
 

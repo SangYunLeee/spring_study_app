@@ -52,7 +52,7 @@ public class UserService {
         }
 
         // 비즈니스 로직 2: User 객체 생성 및 검증 (User의 생성자에서 자동 검증)
-        User newUser = User.createNew(name, email, age);
+        User newUser = User.createNew(User.CreateRequest.of(name, email, age));
 
         // Repository를 통해 저장
         return userRepository.save(newUser);
@@ -149,7 +149,7 @@ public class UserService {
         }
 
         // 3. 필드 업데이트 (전체 필드 업데이트)
-        existingUser.update(User.UpdateRequest.of(name, email, age));
+        existingUser.update(User.UpdateRequest.of(name, email, age, null, null));
 
         // 4. 저장 (JPA가 변경 감지하여 자동 UPDATE)
         return userRepository.save(existingUser);
@@ -175,7 +175,7 @@ public class UserService {
         }
 
         // 3. 변경된 필드만 업데이트 (null이 아닌 필드만 업데이트)
-        existingUser.update(User.UpdateRequest.of(name, email, age));
+        existingUser.update(User.UpdateRequest.of(name, email, age, null, null));
 
         // 4. 저장 (변경된 필드가 있을 경우에만 UPDATE 쿼리 발생)
         return userRepository.save(existingUser);

@@ -21,23 +21,28 @@ dbmate Spec → DB Schema → PostgreSQL
 
 ## Essential Development Commands
 
+**IMPORTANT**: Use `/usr/local/bin/docker-compose` for docker-compose commands (NOT `docker compose`).
+
 ### Database Management
 
 ```bash
 # Start PostgreSQL + auto-migration
-docker-compose up -d
+/usr/local/bin/docker-compose up -d
 
 # Manual migration (if needed)
-docker-compose run --rm dbmate up
+/usr/local/bin/docker-compose run --rm dbmate up
 
 # Check migration status
-cd database && dbmate status
+/usr/local/bin/docker-compose run --rm dbmate status
 
-# Create new migration
-cd database && dbmate new <description>
+# Create new migration (manual - timestamp required)
+# File format: database/db/migrations/YYYYMMDDHHMMSS_description.sql
 
 # Connect to database
-docker exec -it springbasic-postgres psql -U springuser -d springbasic
+/usr/local/bin/docker exec -it springbasic-postgres psql -U springuser -d springbasic
+
+# Check container status
+/usr/local/bin/docker-compose ps
 ```
 
 ### API Development
@@ -67,9 +72,12 @@ docker exec -it springbasic-postgres psql -U springuser -d springbasic
 **When changing DB schema:**
 1. Create migration: `cd database && dbmate new <description>`
 2. Write SQL in `database/db/migrations/xxx.sql`
-3. Run: `dbmate up`
-4. Update Entity: `src/main/java/.../model/*.java`
-5. Start app (JPA validates schema automatically)
+3. **Update DBML schema**: `database/db/schema.dbml` (keep in sync!)
+4. Run: `/usr/local/bin/docker-compose run --rm dbmate up`
+5. Update Entity: `src/main/java/.../model/*.java`
+6. Start app (JPA validates schema automatically)
+
+**IMPORTANT**: DBML과 migration은 항상 함께 업데이트해야 합니다!
 
 ## High-Level Architecture
 
