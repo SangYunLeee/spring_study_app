@@ -32,10 +32,22 @@ servers:
     description: 로컬 개발 서버
 
 tags:
+  - name: auth
+    description: 인증 API (회원가입, 로그인)
   - name: users
     description: 사용자 관리 API
 
 paths:
+  # ===== 인증 =====
+
+  # POST /api/auth/register
+  /api/auth/register:
+    $ref: 'paths/auth-register.yaml'
+
+  # POST /api/auth/login
+  /api/auth/login:
+    $ref: 'paths/auth-login.yaml'
+
   # ===== 사용자 CRUD =====
 
   # POST /api/users, GET /api/users
@@ -77,6 +89,16 @@ components:
 
   # ===== 스키마 =====
   schemas:
+    # ----- 인증 스키마 -----
+    RegisterRequest:
+      $ref: 'schemas/RegisterRequest.yaml'
+
+    LoginRequest:
+      $ref: 'schemas/LoginRequest.yaml'
+
+    AuthResponse:
+      $ref: 'schemas/AuthResponse.yaml'
+
     # ----- 요청 스키마 -----
     CreateUserRequest:
       $ref: 'schemas/requests/CreateUserRequest.yaml'

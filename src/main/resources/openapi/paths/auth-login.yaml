@@ -1,0 +1,63 @@
+post:
+  tags:
+    - auth
+  summary: 로그인
+  description: |
+    이메일과 비밀번호로 로그인하여 JWT 토큰을 발급받습니다.
+
+    ## 프로세스
+    1. 이메일로 사용자 조회
+    2. 비밀번호 검증 (BCrypt)
+    3. JWT 토큰 발급
+
+    ## JWT 토큰 사용
+    발급받은 토큰은 다음과 같이 사용합니다:
+    ```
+    Authorization: Bearer {token}
+    ```
+  operationId: login
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../schemas/LoginRequest.yaml'
+        examples:
+          normal:
+            summary: 일반 로그인
+            value:
+              email: "hong@example.com"
+              password: "myPassword123"
+  responses:
+    '200':
+      description: 로그인 성공
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/AuthResponse.yaml'
+          example:
+            token: "eyJhbGciOiJIUzI1NiJ9..."
+            userId: 1
+            email: "hong@example.com"
+            name: "홍길동"
+            role: "USER"
+    '400':
+      description: 잘못된 요청
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/responses/ErrorResponse.yaml'
+          example:
+            status: 400
+            error: "Bad Request"
+            message: "이메일과 비밀번호를 입력해주세요"
+    '401':
+      description: 인증 실패 (이메일 또는 비밀번호 불일치)
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/responses/ErrorResponse.yaml'
+          example:
+            status: 401
+            error: "Unauthorized"
+            message: "이메일 또는 비밀번호가 일치하지 않습니다"

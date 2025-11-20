@@ -63,11 +63,17 @@ dbmate Spec → DB Schema → PostgreSQL
 
 ### Development Workflow
 
-**When changing API:**
+**When adding/changing API:**
 1. Edit OpenAPI spec: `src/main/resources/openapi/api-spec.yaml`
+   - Create schema YAML: `schemas/NewRequest.yaml`, `schemas/NewResponse.yaml`
+   - Create path YAML: `paths/new-endpoint.yaml`
+   - Reference in `api-spec.yaml`
 2. Generate: `./gradlew generateApi`
-3. Update Controller implementation
-4. Test
+3. Implement Controller (implement generated interface)
+4. Implement Service (business logic)
+5. Test
+
+**IMPORTANT**: 절대 Controller를 수동으로 작성하지 마세요! 항상 OpenAPI 명세를 먼저 작성하고 코드를 생성하세요.
 
 **When changing DB schema:**
 1. Create migration: `cd database && dbmate new <description>`

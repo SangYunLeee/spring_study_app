@@ -1,0 +1,34 @@
+type: object
+description: 인증 응답 (회원가입/로그인)
+required:
+  - token
+  - userId
+  - email
+  - name
+  - role
+properties:
+  token:
+    type: string
+    description: JWT 액세스 토큰
+    example: "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJob25nQGV4YW1wbGUuY29tIiwiZXhwIjoxNjk2NTIxNjAwfQ.abc123"
+  userId:
+    type: integer
+    format: int64
+    description: 사용자 ID
+    example: 1
+  email:
+    type: string
+    format: email
+    description: 이메일 주소
+    example: "hong@example.com"
+  name:
+    type: string
+    description: 사용자 이름
+    example: "홍길동"
+  role:
+    type: string
+    description: 사용자 권한
+    enum:
+      - USER
+      - ADMIN
+    example: "USER"
