@@ -1,7 +1,6 @@
 package com.example.springbasic.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import java.util.Objects;
 
 /**
@@ -64,7 +63,7 @@ public class Comment extends BaseEntity {
 
     /**
      * 댓글 생성 (정적 팩토리 메서드)
-     * CreateRequest가 이미 Bean Validation으로 검증됨
+     * 검증은 Controller에서 완료됨 (OpenAPI 스키마 기반)
      */
     public static Comment create(CreateRequest request, User author, Post post) {
         Comment comment = new Comment();
@@ -79,7 +78,7 @@ public class Comment extends BaseEntity {
     /**
      * 댓글 수정
      * null이 아닌 필드만 업데이트
-     * UpdateRequest가 이미 Bean Validation으로 검증됨
+     * 검증은 Controller에서 완료됨 (OpenAPI 스키마 기반)
      */
     public void update(UpdateRequest request) {
         if (request.content() != null) {
@@ -89,10 +88,9 @@ public class Comment extends BaseEntity {
 
     /**
      * 댓글 생성 요청 DTO
-     * Bean Validation으로 형식 검증
+     * 순수 데이터 전달 객체 (검증은 Controller에서 수행)
      */
     public record CreateRequest(
-            @NotBlank(message = "댓글 내용은 필수입니다")
             String content
     ) {
         public static CreateRequest of(String content) {
@@ -103,6 +101,7 @@ public class Comment extends BaseEntity {
     /**
      * 댓글 수정 요청 DTO
      * null 허용 (부분 업데이트)
+     * 순수 데이터 전달 객체 (검증은 Controller에서 수행)
      */
     public record UpdateRequest(
             String content

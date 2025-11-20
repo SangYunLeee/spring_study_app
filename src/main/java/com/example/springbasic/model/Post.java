@@ -1,8 +1,6 @@
 package com.example.springbasic.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -73,7 +71,7 @@ public class Post extends BaseEntity {
 
     /**
      * 게시글 생성 (정적 팩토리 메서드)
-     * CreateRequest가 이미 Bean Validation으로 검증됨
+     * 검증은 Controller에서 완료됨 (OpenAPI 스키마 기반)
      */
     public static Post create(CreateRequest request, User author) {
         Post post = new Post();
@@ -108,7 +106,7 @@ public class Post extends BaseEntity {
     /**
      * 게시글 수정
      * null이 아닌 필드만 업데이트
-     * UpdateRequest가 이미 Bean Validation으로 검증됨
+     * 검증은 Controller에서 완료됨 (OpenAPI 스키마 기반)
      */
     public void update(UpdateRequest request) {
         if (request.title() != null) {
@@ -121,14 +119,10 @@ public class Post extends BaseEntity {
 
     /**
      * 게시글 생성 요청 DTO
-     * Bean Validation으로 형식 검증
+     * 순수 데이터 전달 객체 (검증은 Controller에서 수행)
      */
     public record CreateRequest(
-            @NotBlank(message = "제목은 필수입니다")
-            @Size(max = 200, message = "제목은 200자 이하여야 합니다")
             String title,
-
-            @NotBlank(message = "내용은 필수입니다")
             String content
     ) {
         public static CreateRequest of(String title, String content) {
@@ -139,11 +133,10 @@ public class Post extends BaseEntity {
     /**
      * 게시글 수정 요청 DTO
      * null 허용 (부분 업데이트)
+     * 순수 데이터 전달 객체 (검증은 Controller에서 수행)
      */
     public record UpdateRequest(
-            @Size(max = 200, message = "제목은 200자 이하여야 합니다")
             String title,
-
             String content
     ) {
         public static UpdateRequest of(String title, String content) {

@@ -1,7 +1,6 @@
 package com.example.springbasic.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -60,7 +59,7 @@ public class User extends BaseEntity {
 
     /**
      * 사용자 생성 (정적 팩토리 메서드)
-     * CreateRequest가 이미 Bean Validation으로 검증됨
+     * 검증은 Controller에서 완료됨 (OpenAPI 스키마 기반)
      */
     public static User createNew(CreateRequest request) {
         User user = new User();
@@ -75,7 +74,7 @@ public class User extends BaseEntity {
     /**
      * 사용자 정보 수정
      * null이 아닌 필드만 업데이트
-     * UpdateRequest가 이미 Bean Validation으로 검증됨
+     * 검증은 Controller에서 완료됨 (OpenAPI 스키마 기반)
      */
     public void update(UpdateRequest request) {
         if (request.name() != null) {
@@ -91,21 +90,11 @@ public class User extends BaseEntity {
 
     /**
      * 사용자 생성 요청 DTO
-     * Bean Validation으로 형식 검증
+     * 순수 데이터 전달 객체 (검증은 Controller에서 수행)
      */
     public record CreateRequest(
-            @NotBlank(message = "이름은 필수입니다")
-            @Size(max = 100, message = "이름은 100자 이하여야 합니다")
             String name,
-
-            @NotBlank(message = "이메일은 필수입니다")
-            @Email(message = "올바른 이메일 형식이 아닙니다")
-            @Size(max = 255, message = "이메일은 255자 이하여야 합니다")
             String email,
-
-            @NotNull(message = "나이는 필수입니다")
-            @Min(value = 0, message = "나이는 0 이상이어야 합니다")
-            @Max(value = 150, message = "나이는 150 이하여야 합니다")
             Integer age
     ) {
         public static CreateRequest of(String name, String email, Integer age) {
@@ -116,17 +105,11 @@ public class User extends BaseEntity {
     /**
      * 사용자 수정 요청 DTO
      * null 허용 (부분 업데이트)
+     * 순수 데이터 전달 객체 (검증은 Controller에서 수행)
      */
     public record UpdateRequest(
-            @Size(max = 100, message = "이름은 100자 이하여야 합니다")
             String name,
-
-            @Email(message = "올바른 이메일 형식이 아닙니다")
-            @Size(max = 255, message = "이메일은 255자 이하여야 합니다")
             String email,
-
-            @Min(value = 0, message = "나이는 0 이상이어야 합니다")
-            @Max(value = 150, message = "나이는 150 이하여야 합니다")
             Integer age
     ) {
         public static UpdateRequest of(String name, String email, Integer age) {
