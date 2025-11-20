@@ -59,8 +59,8 @@ class NPlusOneProblemTest {
         userRepository.deleteAll();
 
         // 사용자 생성
-        user1 = userRepository.save(User.createNew("홍길동", "hong@example.com", 25));
-        user2 = userRepository.save(User.createNew("김철수", "kim@example.com", 30));
+        user1 = userRepository.save(User.createNew(User.CreateRequest.of("홍길동", "hong@example.com", 25)));
+        user2 = userRepository.save(User.createNew(User.CreateRequest.of("김철수", "kim@example.com", 30)));
 
         // 게시글 생성
         post1 = Post.create(Post.CreateRequest.of("첫 번째 게시글", "내용 1"), user1);
@@ -72,9 +72,9 @@ class NPlusOneProblemTest {
         postRepository.save(post3);
 
         // 댓글 생성
-        commentRepository.save(Comment.create("댓글 1-1", user2, post1));
-        commentRepository.save(Comment.create("댓글 1-2", user1, post1));
-        commentRepository.save(Comment.create("댓글 2-1", user2, post2));
+        commentRepository.save(Comment.create(Comment.CreateRequest.of("댓글 1-1"), user2, post1));
+        commentRepository.save(Comment.create(Comment.CreateRequest.of("댓글 1-2"), user1, post1));
+        commentRepository.save(Comment.create(Comment.CreateRequest.of("댓글 2-1"), user2, post2));
     }
 
     @Test

@@ -1,6 +1,7 @@
 package com.example.springbasic.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import java.util.Objects;
 
 /**
@@ -63,22 +64,14 @@ public class Comment extends BaseEntity {
 
     /**
      * 댓글 생성 (정적 팩토리 메서드)
+     * CreateRequest가 이미 Bean Validation으로 검증됨
      */
-    public static Comment create(String content, User author, Post post) {
+    public static Comment create(CreateRequest request, User author, Post post) {
         Comment comment = new Comment();
-        comment.content = content;
+        comment.content = request.content();
         comment.author = author;
         comment.post = post;
-        comment.validateContent(content);
         return comment;
-    }
-
-    // ========== 유효성 검증 ==========
-
-    private void validateContent(String content) {
-        if (content == null || content.isBlank()) {
-            throw new IllegalArgumentException("댓글 내용은 필수입니다");
-        }
     }
 
     // ========== 비즈니스 메서드 ==========
@@ -86,18 +79,34 @@ public class Comment extends BaseEntity {
     /**
      * 댓글 수정
      * null이 아닌 필드만 업데이트
+     * UpdateRequest가 이미 Bean Validation으로 검증됨
      */
     public void update(UpdateRequest request) {
         if (request.content() != null) {
-            validateContent(request.content());
             this.content = request.content();
         }
     }
 
     /**
-     * 부분 업데이트를 위한 요청 DTO
+     * 댓글 생성 요청 DTO
+     * Bean Validation으로 형식 검증
      */
-    public record UpdateRequest(String content) {
+    public record CreateRequest(
+            @NotBlank(message = "댓글 내용은 필수입니다")
+            String content
+    ) {
+        public static CreateRequest of(String content) {
+            return new CreateRequest(content);
+        }
+    }
+
+    /**
+     * 댓글 수정 요청 DTO
+     * null 허용 (부분 업데이트)
+     */
+    public record UpdateRequest(
+            String content
+    ) {
         public static UpdateRequest of(String content) {
             return new UpdateRequest(content);
         }

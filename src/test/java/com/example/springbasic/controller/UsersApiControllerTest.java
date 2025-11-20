@@ -97,7 +97,7 @@ class UsersApiControllerTest {
     @DisplayName("POST /api/users - 사용자 생성 성공")
     void createUser_Success() throws Exception {
         // Given: Mock Service 동작 정의
-        User createdUser = User.createNew("홍길동", "hong@example.com", 25);
+        User createdUser = User.createNew(User.CreateRequest.of("홍길동", "hong@example.com", 25));
         createdUser.setId(1L);
 
         when(userService.createUser("홍길동", "hong@example.com", 25))
@@ -202,9 +202,9 @@ class UsersApiControllerTest {
     @DisplayName("GET /api/users - 페이징 조회 성공")
     void getAllUsers_Paging_Success() throws Exception {
         // Given: Mock 페이지 데이터
-        User user1 = User.createNew("홍길동", "hong@example.com", 25);
+        User user1 = User.createNew(User.CreateRequest.of("홍길동", "hong@example.com", 25));
         user1.setId(1L);
-        User user2 = User.createNew("김철수", "kim@example.com", 30);
+        User user2 = User.createNew(User.CreateRequest.of("김철수", "kim@example.com", 30));
         user2.setId(2L);
 
         List<User> users = Arrays.asList(user1, user2);
@@ -243,7 +243,7 @@ class UsersApiControllerTest {
     @DisplayName("GET /api/users/1 - ID로 조회 성공")
     void getUserById_Success() throws Exception {
         // Given
-        User user = User.createNew("홍길동", "hong@example.com", 25);
+        User user = User.createNew(User.CreateRequest.of("홍길동", "hong@example.com", 25));
         user.setId(1L);
 
         when(userService.getUserById(1L))
@@ -289,7 +289,7 @@ class UsersApiControllerTest {
     @DisplayName("PUT /api/users/1 - 전체 수정 성공")
     void updateUser_Success() throws Exception {
         // Given
-        User updatedUser = User.createNew("홍길동2", "hong2@example.com", 30);
+        User updatedUser = User.createNew(User.CreateRequest.of("홍길동2", "hong2@example.com", 30));
         updatedUser.setId(1L);
 
         when(userService.updateUser(1L, "홍길동2", "hong2@example.com", 30))
@@ -324,7 +324,7 @@ class UsersApiControllerTest {
     @DisplayName("PATCH /api/users/1 - 부분 수정 성공 (나이만)")
     void patchUser_Success() throws Exception {
         // Given: 나이만 변경
-        User patchedUser = User.createNew("홍길동", "hong@example.com", 26);
+        User patchedUser = User.createNew(User.CreateRequest.of("홍길동", "hong@example.com", 26));
         patchedUser.setId(1L);
 
         when(userService.patchUser(eq(1L), isNull(), isNull(), eq(26)))
@@ -396,9 +396,9 @@ class UsersApiControllerTest {
     @DisplayName("GET /api/users/search?keyword=홍 - 검색 성공")
     void searchUsers_Success() throws Exception {
         // Given
-        User user1 = User.createNew("홍길동", "hong1@example.com", 25);
+        User user1 = User.createNew(User.CreateRequest.of("홍길동", "hong1@example.com", 25));
         user1.setId(1L);
-        User user2 = User.createNew("홍길순", "hong2@example.com", 30);
+        User user2 = User.createNew(User.CreateRequest.of("홍길순", "hong2@example.com", 30));
         user2.setId(2L);
 
         when(userService.searchUsersByName("홍"))
@@ -426,7 +426,7 @@ class UsersApiControllerTest {
     @DisplayName("GET /api/users/adults - 성인만 조회")
     void getAdultUsers_Success() throws Exception {
         // Given: 19세 이상만
-        User adult = User.createNew("홍길동", "hong@example.com", 25);
+        User adult = User.createNew(User.CreateRequest.of("홍길동", "hong@example.com", 25));
         adult.setId(1L);
 
         when(userService.getAdultUsers())

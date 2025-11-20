@@ -49,15 +49,15 @@ class QueryDslVsJpqlTest {
         postRepository.deleteAll();
         userRepository.deleteAll();
 
-        user1 = userRepository.save(User.createNew("홍길동", "hong@example.com", 25));
-        user2 = userRepository.save(User.createNew("김철수", "kim@example.com", 30));
+        user1 = userRepository.save(User.createNew(User.CreateRequest.of("홍길동", "hong@example.com", 25)));
+        user2 = userRepository.save(User.createNew(User.CreateRequest.of("김철수", "kim@example.com", 30)));
 
         post1 = Post.create(Post.CreateRequest.of("첫 번째 게시글", "내용 1"), user1);
         postRepository.save(post1);
 
-        commentRepository.save(Comment.create("좋은 글이네요!", user2, post1));
-        commentRepository.save(Comment.create("감사합니다", user1, post1));
-        commentRepository.save(Comment.create("동의합니다", user2, post1));
+        commentRepository.save(Comment.create(Comment.CreateRequest.of("좋은 글이네요!"), user2, post1));
+        commentRepository.save(Comment.create(Comment.CreateRequest.of("감사합니다"), user1, post1));
+        commentRepository.save(Comment.create(Comment.CreateRequest.of("동의합니다"), user2, post1));
     }
 
     @Test

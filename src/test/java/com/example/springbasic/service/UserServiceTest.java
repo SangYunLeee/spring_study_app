@@ -77,7 +77,7 @@ class UserServiceTest {
                 .thenReturn(Optional.empty());
 
         // Mock 동작 정의 2: 저장 → 성공 (ID가 할당된 User 반환)
-        User savedUser = User.createNew(name, email, age);
+        User savedUser = User.createNew(User.CreateRequest.of(name, email, age));
         savedUser.setId(1L); // ID 설정 (실제로는 DB가 자동 생성)
         when(userRepository.save(any(User.class)))
                 .thenReturn(savedUser);
@@ -109,7 +109,7 @@ class UserServiceTest {
     void createUser_DuplicateEmail() {
         // Given
         String email = "hong@example.com";
-        User existingUser = User.createNew("기존유저", email, 30);
+        User existingUser = User.createNew(User.CreateRequest.of("기존유저", email, 30));
 
         // Mock 동작: 이미 존재하는 사용자 반환
         when(userRepository.findByEmail(email))
@@ -139,7 +139,7 @@ class UserServiceTest {
     void getUserById_Success() {
         // Given
         Long userId = 1L;
-        User mockUser = User.createNew("홍길동", "hong@example.com", 25);
+        User mockUser = User.createNew(User.CreateRequest.of("홍길동", "hong@example.com", 25));
         mockUser.setId(userId);
 
         when(userRepository.findById(userId))
@@ -194,7 +194,7 @@ class UserServiceTest {
     void updateUser_Success() {
         // Given
         Long userId = 1L;
-        User existingUser = User.createNew("홍길동", "hong@example.com", 25);
+        User existingUser = User.createNew(User.CreateRequest.of("홍길동", "hong@example.com", 25));
         existingUser.setId(userId);
 
         String newName = "홍길동2";
@@ -256,10 +256,10 @@ class UserServiceTest {
     void updateUser_DuplicateEmail() {
         // Given
         Long userId = 1L;
-        User existingUser = User.createNew("홍길동", "hong@example.com", 25);
+        User existingUser = User.createNew(User.CreateRequest.of("홍길동", "hong@example.com", 25));
         existingUser.setId(userId);
 
-        User anotherUser = User.createNew("김철수", "kim@example.com", 30);
+        User anotherUser = User.createNew(User.CreateRequest.of("김철수", "kim@example.com", 30));
         anotherUser.setId(2L);
 
         when(userRepository.findById(userId))
