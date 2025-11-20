@@ -1240,10 +1240,137 @@ if (postId != null) {
 
 ---
 
+---
+
+### 세션 14: 프로젝트 문서화 및 dbmate 통합 개선 (2025-11-20)
+
+#### 학습 목표
+- Liquibase에서 dbmate로의 마이그레이션 도구 변경 문서화
+- CLAUDE.md 작성으로 향후 개발 가이드 제공
+- 프로젝트 문서 일관성 유지
+
+#### 완료한 작업
+
+1. **문서 일관성 개선**
+   - 모든 문서에서 "Liquibase" 참조를 "dbmate"로 통일
+   - 수정 파일:
+     - [README.md](../README.md)
+     - [SESSION_CONTEXT.md](SESSION_CONTEXT.md)
+     - [DB_SPEC_MANAGEMENT.md](DB_SPEC_MANAGEMENT.md)
+     - [database/README.md](../database/README.md)
+
+2. **CLAUDE.md 작성**
+   - [CLAUDE.md](../CLAUDE.md) 신규 생성
+   - Claude Code를 위한 프로젝트 가이드 작성
+   - 핵심 명령어 및 워크플로우 정리
+   - 아키텍처 및 디자인 패턴 문서화
+   - 일반적인 함정 및 해결 방법 추가
+
+3. **커밋 메시지 작성**
+   - 변경사항을 명확하게 설명하는 커밋 메시지
+   - 기술 스택 및 다음 단계 명시
+
+#### 학습한 핵심 개념
+
+**프로젝트 문서화의 중요성:**
+- CLAUDE.md는 향후 Claude Code 세션을 위한 "컨텍스트 파일"
+- 신규 개발자(또는 새 AI 세션)가 빠르게 온보딩 가능
+- 프로젝트의 철학과 원칙을 명시
+
+**문서 일관성:**
+- 도구 변경 시 모든 문서를 업데이트해야 함
+- 문서 불일치는 혼란과 실수로 이어짐
+- Grep을 통한 전체 검색으로 모든 참조 찾기
+
+**명세 우선 개발 문서화:**
+```
+OpenAPI Spec → Generated Code → Implementation
+                                      ↓
+                                API ↔ Domain
+                                      ↓
+                                   Service
+                                      ↓
+dbmate Spec → DB Schema → PostgreSQL
+```
+
+#### CLAUDE.md 주요 내용
+
+1. **필수 명령어**
+   - 데이터베이스 관리: `docker-compose up -d`, `dbmate up`
+   - API 개발: `./gradlew generateApi`, `./gradlew bootRun`
+   - 개발 워크플로우 (API 변경 / DB 변경)
+
+2. **고수준 아키텍처**
+   - 명세 우선 철학 설명
+   - 계층 분리 (API vs Domain)
+   - 데이터베이스 독립성 (dbmate 독립 실행)
+   - 생성된 코드 위치
+
+3. **핵심 디자인 패턴**
+   - OpenAPI 모듈화 구조
+   - 생성자 의존성 주입
+   - 전역 예외 처리
+   - 트랜잭션 관리
+   - JPA 베스트 프랙티스
+
+4. **파일 조직**
+   - Controllers: API 인터페이스 구현, DTO ↔ Entity 변환
+   - Services: 비즈니스 로직, Domain 모델 사용
+   - Repositories: JpaRepository, QueryDSL 커스텀
+   - DTOs: 자동 생성, 수동 수정 금지
+
+5. **테스트 전략**
+   - 단위 테스트: Mock 사용, 빠름
+   - 통합 테스트: 실제 DB, 전체 스택
+
+6. **일반적인 함정**
+   - 생성된 코드 수정 금지
+   - Service에서 API DTO 사용 금지
+   - ddl-auto: create 사용 금지
+   - EAGER 페칭 사용 금지
+
+#### 문서 구조
+
+```
+docs/
+├── LEARNING_LOG.md           # 학습 이력 (14개 세션)
+├── SESSION_CONTEXT.md        # 빠른 참조용 컨텍스트
+├── DB_SPEC_MANAGEMENT.md     # dbmate 사용법
+├── WHY_NOT_API_MODEL_IN_SERVICE.md  # 계층 분리 이유
+├── SPEC_FIRST_DEVELOPMENT.md # 명세 우선 개발
+└── ...
+
+CLAUDE.md                     # Claude Code 가이드 (신규)
+README.md                     # 프로젝트 개요
+```
+
+#### 핵심 깨달음
+
+1. **문서는 코드만큼 중요**
+   - 좋은 문서는 온보딩 시간을 크게 단축
+   - 프로젝트 원칙을 명시하면 실수 방지
+
+2. **AI를 위한 문서 (CLAUDE.md)**
+   - AI는 컨텍스트가 중요
+   - 명확한 가이드로 일관된 코드 생성
+   - "왜"를 설명하면 더 나은 결정
+
+3. **도구 변경은 전체 문서 업데이트 필요**
+   - Liquibase → dbmate 변경
+   - 모든 참조를 일관되게 수정
+
+4. **명세 우선의 힘**
+   - API: OpenAPI 명세
+   - DB: dbmate 마이그레이션
+   - 코드: 자동 생성 또는 명세 기반
+   - Git에 모든 명세가 기록됨
+
+---
+
 ## 업데이트된 학습 통계
 
-- **총 학습 세션**: 13회
-- **생성한 파일 수**: 45개 이상
+- **총 학습 세션**: 14회
+- **생성한 파일 수**: 46개 이상 (CLAUDE.md 추가)
 - **구현한 API 엔드포인트**: 9개 (RESTful + 페이징)
 - **구현한 엔티티**: 3개 (User, Post, Comment)
 - **학습한 어노테이션**:
@@ -1280,6 +1407,7 @@ if (postId != null) {
   - ✅ 레벨 10: Swagger UI
   - ✅ 레벨 12: JPA 연관관계 + N+1 문제
   - ✅ 레벨 13: QueryDSL (타입 안전 쿼리)
+  - ✅ 레벨 14: 프로젝트 문서화 (CLAUDE.md)
 - **다음 학습 주제**:
   - Spring Security (인증/인가)
   - 성능 최적화 (캐싱, 인덱스)
