@@ -283,16 +283,16 @@ dbmate --help
 
 ---
 
-## 🆚 왜 Liquibase에서 dbmate로?
+## 🆚 왜 애플리케이션과 분리했나?
 
-### ❌ 기존 방식 (Liquibase in Spring Boot)
+### ❌ 기존 방식 (DB 마이그레이션 도구 in Spring Boot)
 
 ```
 ./gradlew bootRun
     ↓
 Spring Boot 시작
     ↓
-Liquibase 자동 실행 (DB 변경)
+DB 마이그레이션 자동 실행 (DB 변경)
     ↓
 애플리케이션 시작
 ```
@@ -300,7 +300,6 @@ Liquibase 자동 실행 (DB 변경)
 **문제점:**
 - DB 변경이 애플리케이션 시작에 종속
 - 프로덕션 배포 시 위험
-- YAML/XML로 복잡한 설정
 - DB 관리를 독립적으로 할 수 없음
 
 ### ✅ 새 방식 (dbmate 독립 실행)

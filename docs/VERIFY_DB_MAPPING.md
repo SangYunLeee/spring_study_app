@@ -1,4 +1,4 @@
-# Liquibase + Entity 매핑 검증 가이드
+# dbmate + Entity 매핑 검증 가이드
 
 ## 🔍 검증 방법 3가지
 
@@ -18,7 +18,7 @@ spring:
 
 **실행 순서:**
 ```
-1. Liquibase가 DB 스키마 생성
+1. dbmate가 DB 스키마 생성
    ↓
 2. JPA Hibernate가 Entity 읽기
    ↓
@@ -44,7 +44,6 @@ docker-compose up -d
 
 ✅ **성공 시:**
 ```
-Liquibase: Successfully released change log lock
 Hibernate:
     select
         constraint_name,
@@ -197,20 +196,15 @@ Schema-validation: missing column [phone_number] in table [users]
 - DB에는 `phone_number` 컬럼이 없음
 
 **해결:**
-```yaml
-# 새 changeset 작성
-# db/changelog/changes/004-add-phone-number.yaml
-databaseChangeLog:
-  - changeSet:
-      id: 004-add-phone-number
-      author: developer
-      changes:
-        - addColumn:
-            tableName: users
-            columns:
-              - column:
-                  name: phone_number
-                  type: VARCHAR(20)
+```sql
+-- 새 마이그레이션 작성
+-- database/db/migrations/20250101000004_add_phone_number.sql
+
+-- migrate:up
+ALTER TABLE users ADD COLUMN phone_number VARCHAR(20);
+
+-- migrate:down
+ALTER TABLE users DROP COLUMN phone_number;
 ```
 
 ### 문제 2: 타입 불일치
@@ -226,12 +220,13 @@ Found: varchar, expected: integer
 - DB: `VARCHAR age`
 
 **해결:**
-```yaml
-# Liquibase로 타입 변경
-- modifyDataType:
-    tableName: users
-    columnName: age
-    newDataType: INTEGER
+```sql
+-- dbmate로 타입 변경
+-- migrate:up
+ALTER TABLE users ALTER COLUMN age TYPE INTEGER USING age::integer;
+
+-- migrate:down
+ALTER TABLE users ALTER COLUMN age TYPE VARCHAR;
 ```
 
 ### 문제 3: Nullable 불일치
@@ -246,11 +241,12 @@ Schema-validation: column [email] is nullable, should be not null
 - DB: nullable 제약 없음
 
 **해결:**
-```yaml
-- addNotNullConstraint:
-    tableName: users
-    columnName: email
-    columnDataType: VARCHAR(255)
+```sql
+-- migrate:up
+ALTER TABLE users ALTER COLUMN email SET NOT NULL;
+
+-- migrate:down
+ALTER TABLE users ALTER COLUMN email DROP NOT NULL;
 ```
 
 ---

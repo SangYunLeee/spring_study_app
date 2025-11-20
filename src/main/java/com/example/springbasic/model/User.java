@@ -9,7 +9,7 @@ import java.util.Objects;
  * 사용자 정보를 담는 JPA Entity
  *
  * DB 명세와 매핑:
- * - Liquibase 명세(001-create-users-table.yaml)에 정의된 테이블 구조
+ * - dbmate 마이그레이션(20250101000001_create_users_table.sql)에 정의된 테이블 구조
  * - 테이블명: users
  * - 컬럼: id, name, email, age, created_at, updated_at
  *

@@ -13,9 +13,6 @@ spring:
       hibernate:
         format_sql: true
 
-  liquibase:
-    drop-first: false  # true로 설정하면 시작 시 DB 초기화 (조심!)
-
 logging:
   level:
     com.example.springbasic: DEBUG

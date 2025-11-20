@@ -7,7 +7,7 @@
 ### 완성된 기능
 ✅ **명세 우선 개발 (Spec-First)** 완전 구축
 - API: OpenAPI 3.0.3 명세 → 자동 코드 생성
-- DB: Liquibase 명세 → 스키마 버전 관리
+- DB: dbmate 명세 → 스키마 버전 관리
 - 계층 분리: API 모델 ↔ Domain 모델
 
 ✅ **RESTful API (7개 엔드포인트)**
@@ -22,7 +22,7 @@
 ✅ **DB 연동**
 - PostgreSQL 16 (Docker)
 - Spring Data JPA
-- Liquibase 3개 changeset
+- dbmate 3개 마이그레이션
 - ddl-auto: validate (자동 검증)
 
 ### 핵심 아키텍처
@@ -36,7 +36,7 @@ OpenAPI 명세 → 코드 생성 → Controller 구현
                               ↓
                         Repository (JPA)
                               ↓
-Liquibase 명세 → DB 스키마 → PostgreSQL
+dbmate 명세 → DB 스키마 → PostgreSQL
 ```
 
 ### 디렉토리 구조 (중요한 것만)
@@ -48,12 +48,10 @@ src/main/
 │   │   ├── api-spec.yaml
 │   │   ├── paths/
 │   │   └── schemas/
-│   └── db/changelog/          # DB 명세 (YAML)
-│       ├── db.changelog-master.yaml
-│       └── changes/
-│           ├── 001-create-users-table.yaml
-│           ├── 002-add-email-index.yaml
-│           └── 003-add-timestamps.yaml
+│   └── database/db/migrations/ # DB 명세 (SQL)
+│       ├── 20250101000001_create_users_table.sql
+│       ├── 20250101000002_add_email_index.sql
+│       └── 20250101000003_add_updated_at_trigger.sql
 │
 └── java/com/example/springbasic/
     ├── controller/
@@ -79,9 +77,9 @@ build/generated/                       # 자동 생성 (Git 무시)
 3. Controller 구현 수정
 
 **DB 변경 시:**
-1. `004-xxx.yaml` changeset 작성
+1. `20250101000004_xxx.sql` 마이그레이션 작성
 2. `User.java` Entity 수정
-3. `./gradlew bootRun` (자동 적용)
+3. `dbmate up` (마이그레이션 실행)
 
 ### 2. Service는 Domain 모델만 사용!
 
@@ -129,29 +127,29 @@ spring:
 ```
 
 - Entity와 DB 스키마가 불일치하면 시작 실패
-- Liquibase로만 스키마 변경
+- dbmate로만 스키마 변경
 - 프로덕션 안전성 보장
 
-### 4. Liquibase changeset은 영구적
+### 4. dbmate 마이그레이션은 영구적
 
 ❌ **절대 하지 말 것:**
-- 이미 실행된 changeset 수정
-- changeset ID 변경
-- changeset 삭제
+- 이미 실행된 마이그레이션 수정
+- 마이그레이션 파일명 변경
+- 마이그레이션 삭제
 
 ✅ **올바른 방법:**
-- 새로운 changeset 추가
-- 004, 005, 006... 순차적으로
+- 새로운 마이그레이션 추가
+- 타임스탬프 순차적으로 생성
 
 ## 실행 방법
 
 ### 처음 시작 시
 
 ```bash
-# 1. PostgreSQL 시작
+# 1. PostgreSQL 시작 (dbmate 자동 마이그레이션 포함)
 docker-compose up -d
 
-# 2. 애플리케이션 실행 (Liquibase 자동 실행)
+# 2. 애플리케이션 실행
 ./gradlew bootRun
 
 # 3. 테스트
@@ -169,7 +167,8 @@ curl http://localhost:8080/api/users
 ./gradlew clean generateApi build
 
 # DB 명세 변경 시
-./gradlew bootRun  # 자동으로 새 changeset 실행
+dbmate up  # 새 마이그레이션 실행
+./gradlew bootRun  # 애플리케이션 시작
 ```
 
 ## 학습 진행 상황
@@ -196,7 +195,6 @@ curl http://localhost:8080/api/users
 
 참고 문서:
 - [SPEC_FIRST_DEVELOPMENT.md](SPEC_FIRST_DEVELOPMENT.md) - 명세 우선 개발
-- [DB_SPEC_MANAGEMENT.md](DB_SPEC_MANAGEMENT.md) - Liquibase 사용법
 - [VERIFY_DB_MAPPING.md](VERIFY_DB_MAPPING.md) - 매핑 검증 방법
 
 ## 새 세션 시작 시 Claude에게 할 말
@@ -236,7 +234,7 @@ curl -X POST http://localhost:8080/api/users -H "Content-Type: application/json"
 ### 애플리케이션 시작 안 됨
 - [ ] PostgreSQL 실행 중? (`docker-compose ps`)
 - [ ] Entity-DB 매핑 에러? (로그 확인)
-- [ ] Liquibase changeset 문법 오류?
+- [ ] dbmate 마이그레이션 문법 오류?
 
 ### API 코드 생성 안 됨
 - [ ] `api-spec.yaml` 문법 오류?
@@ -244,14 +242,14 @@ curl -X POST http://localhost:8080/api/users -H "Content-Type: application/json"
 - [ ] `build/generated/` 디렉토리 확인?
 
 ### DB 스키마 불일치
-- [ ] Liquibase changeset 작성했나?
+- [ ] dbmate 마이그레이션 작성했나?
 - [ ] Entity 어노테이션 맞나?
 - [ ] VERIFY_DB_MAPPING.md 참고
 
 ## 마지막 작업 (이 세션)
 
 오늘 세션에서 한 일:
-1. ✅ Liquibase-Entity 매핑 검증 방법 문서 작성 ([VERIFY_DB_MAPPING.md](VERIFY_DB_MAPPING.md))
+1. ✅ dbmate-Entity 매핑 검증 방법 문서 작성 ([VERIFY_DB_MAPPING.md](VERIFY_DB_MAPPING.md))
 2. ✅ 학습 기록 업데이트 ([LEARNING_LOG.md](LEARNING_LOG.md))
 3. ✅ README 전체 재작성 (명세 우선 개발 반영)
 4. ✅ 세션 컨텍스트 문서 작성 (이 파일)

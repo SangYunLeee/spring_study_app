@@ -9,7 +9,7 @@ Spring Framework를 명세 우선 개발 방식(Specification-First Development)
 - **빌드 도구**: Gradle 8.14.2
 - **데이터베이스**: PostgreSQL 16 (Docker)
 - **API 명세**: OpenAPI 3.0.3
-- **DB 명세**: Liquibase
+- **DB 명세**: dbmate
 - **포트**: 8080
 
 ## 핵심 아키텍처: 명세 우선 개발
@@ -36,12 +36,13 @@ Spring Framework를 명세 우선 개발 방식(Specification-First Development)
 └─────────────────────────────────────────────────────┘
           ↓
 ┌─────────────────────────────────────────────────────┐
-│ DB 명세 (Liquibase)                                 │
-│ src/main/resources/db/changelog/                    │
-│ - db.changelog-master.yaml                          │
-│ - changes/ (변경사항)                               │
+│ DB 명세 (dbmate)                                    │
+│ database/db/migrations/                             │
+│ - 20250101000001_create_users_table.sql             │
+│ - 20250101000002_add_email_index.sql                │
+│ - 20250101000003_add_updated_at_trigger.sql         │
 └─────────────────────────────────────────────────────┘
-          ↓ Liquibase 실행
+          ↓ dbmate up
 ┌─────────────────────────────────────────────────────┐
 │ PostgreSQL Database                                 │
 │ docker-compose로 실행                               │
@@ -192,9 +193,11 @@ curl http://localhost:8080/api/users
 ### DB 명세 변경 시
 
 ```bash
-# 1. Liquibase changeset 작성 (004-xxx.yaml)
+# 1. dbmate 마이그레이션 작성 (20250101000004_xxx.sql)
 # 2. Entity 수정 (User.java)
-# 3. 애플리케이션 재시작 (자동으로 적용됨)
+# 3. 마이그레이션 실행
+dbmate up
+# 4. 애플리케이션 재시작
 ./gradlew bootRun
 ```
 
@@ -217,7 +220,7 @@ docker exec -it springbasic-postgres psql -U springuser -d springbasic
 \dt          # 테이블 목록
 \d users     # users 테이블 구조
 SELECT * FROM users;           # 데이터 조회
-SELECT * FROM databasechangelog;  # Liquibase 이력
+SELECT * FROM schema_migrations;  # dbmate 마이그레이션 이력
 
 # 종료
 docker-compose stop
@@ -262,11 +265,11 @@ Domain 계층 (Service, Repository)
 - 다른 API(GraphQL 등)에서도 같은 Service 재사용
 - 테스트 용이
 
-### 3. JPA + Liquibase
+### 3. JPA + dbmate
 
-**Liquibase:**
+**dbmate:**
 - DB 스키마 버전 관리
-- 변경 이력 Git에 저장
+- SQL 마이그레이션으로 변경 이력 Git에 저장
 - 롤백 가능
 
 **ddl-auto: validate:**
@@ -314,7 +317,7 @@ Repository (데이터 접근)
 - [LAYER_ARCHITECTURE.md](docs/LAYER_ARCHITECTURE.md) - 3계층 구조
 
 ### DB 관리
-- [DB_SPEC_MANAGEMENT.md](docs/DB_SPEC_MANAGEMENT.md) - Liquibase 사용법
+- [DB_SPEC_MANAGEMENT.md](docs/DB_SPEC_MANAGEMENT.md) - dbmate 사용법
 - [VERIFY_DB_MAPPING.md](docs/VERIFY_DB_MAPPING.md) - Entity-DB 매핑 검증
 
 ### 기타
@@ -343,7 +346,7 @@ Repository (데이터 접근)
 - OpenAPI Generator
 
 **DB 명세:**
-- Liquibase
+- dbmate
 
 **인프라:**
 - Docker Compose
@@ -403,7 +406,7 @@ docker-compose restart postgres
 ./gradlew bootRun
 
 # 예시: "Schema-validation: missing column [phone_number]"
-# → Liquibase에 컬럼 추가 changeset 작성 필요
+# → dbmate에 컬럼 추가 마이그레이션 작성 필요
 ```
 
 ### OpenAPI 코드 생성 실패

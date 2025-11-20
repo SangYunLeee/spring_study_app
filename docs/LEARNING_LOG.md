@@ -673,12 +673,12 @@ OpenAPI 명세 작성 → 코드 생성 → 구현
 
 ---
 
-### 세션 5: 데이터베이스 명세 관리 (Liquibase + PostgreSQL) (2025-11-06)
+### 세션 5: 데이터베이스 명세 관리 (dbmate + PostgreSQL) (2025-11-06)
 
 #### 학습 목표
-- DB 스키마도 명세로 관리 (Liquibase)
+- DB 스키마도 명세로 관리 (dbmate)
 - PostgreSQL 연동 (Docker)
-- JPA Entity와 Liquibase 스키마 매핑
+- JPA Entity와 dbmate 스키마 매핑
 - 명세 우선 개발을 DB까지 확장
 
 #### 완료한 작업
@@ -687,12 +687,11 @@ OpenAPI 명세 작성 → 코드 생성 → 구현
    - [docker-compose.yml](docker-compose.yml) 작성
    - PostgreSQL 16 컨테이너 설정
 
-2. **Liquibase 설정**
-   - [db.changelog-master.yaml](src/main/resources/db/changelog/db.changelog-master.yaml)
-   - 변경사항 파일들:
-     - [001-create-users-table.yaml](src/main/resources/db/changelog/changes/001-create-users-table.yaml)
-     - [002-add-email-index.yaml](src/main/resources/db/changelog/changes/002-add-email-index.yaml)
-     - [003-add-timestamps.yaml](src/main/resources/db/changelog/changes/003-add-timestamps.yaml)
+2. **dbmate 설정**
+   - 마이그레이션 파일들:
+     - [20250101000001_create_users_table.sql](database/db/migrations/20250101000001_create_users_table.sql)
+     - [20250101000002_add_email_index.sql](database/db/migrations/20250101000002_add_email_index.sql)
+     - [20250101000003_add_updated_at_trigger.sql](database/db/migrations/20250101000003_add_updated_at_trigger.sql)
 
 3. **Entity 변환**
    - [User.java](src/main/java/com/example/springbasic/model/User.java)
@@ -710,9 +709,9 @@ OpenAPI 명세 작성 → 코드 생성 → 구현
 
 #### 학습한 핵심 개념
 
-**Liquibase:**
+**dbmate:**
 - DB 스키마 버전 관리
-- changeset으로 변경 이력 추적
+- SQL 마이그레이션으로 변경 이력 추적
 - 롤백 가능
 
 **ddl-auto: validate:**
@@ -732,7 +731,7 @@ spring:
 
 **명세 우선 개발 (API + DB):**
 ```
-OpenAPI 명세 (API)  ↔  Liquibase 명세 (DB)
+OpenAPI 명세 (API)  ↔  dbmate 명세 (DB)
       ↓                      ↓
   Controller  ↔  Service  ↔  Entity
 ```
@@ -745,9 +744,9 @@ OpenAPI 명세 (API)  ↔  Liquibase 명세 (DB)
 
 #### 핵심 깨달음
 
-1. **DB도 명세로 관리**: Liquibase changeset이 Git에 기록
+1. **DB도 명세로 관리**: dbmate 마이그레이션이 Git에 기록
 2. **ddl-auto: validate는 필수**: 매핑 불일치 자동 감지
-3. **한번 실행된 changeset은 수정 금지**: 새 changeset 추가만
+3. **한번 실행된 마이그레이션은 수정 금지**: 새 마이그레이션 추가만
 4. **API와 DB 모두 명세 우선**: 완전한 Spec-First 아키텍처
 
 ---

@@ -327,14 +327,14 @@ dbmate --help
 
 ## 🆚 애플리케이션과 분리된 이유
 
-### ❌ 기존 방식 (Liquibase in Spring Boot)
+### ❌ 기존 방식 (DB 마이그레이션 도구 in Spring Boot)
 
 ```
 ./gradlew bootRun
     ↓
 Spring Boot 시작
     ↓
-Liquibase 자동 실행 (DB 변경)
+DB 마이그레이션 자동 실행 (DB 변경)
     ↓
 애플리케이션 시작
 ```
@@ -370,9 +370,6 @@ cd ..
 ```yaml
 # application.yml
 spring:
-  liquibase:
-    enabled: false  # Liquibase 비활성화!
-
   jpa:
     hibernate:
       ddl-auto: validate  # 검증만! (스키마 생성 안 함)

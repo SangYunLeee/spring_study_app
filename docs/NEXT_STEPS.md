@@ -8,7 +8,7 @@ Spring Boot의 핵심 개념들을 체계적으로 학습해왔습니다.
 ✅ Spring Boot 프로젝트 생성 및 기본 구조
 ✅ Controller-Service-Repository 계층 분리
 ✅ RESTful API 설계 (GET, POST, PUT, PATCH, DELETE)
-✅ 명세 우선 개발 (OpenAPI + Liquibase)
+✅ 명세 우선 개발 (OpenAPI + dbmate)
 ✅ PostgreSQL + Spring Data JPA 연동
 ✅ 전역 예외 처리 (@RestControllerAdvice)
 ✅ Bean Validation (@Valid)
@@ -146,7 +146,7 @@ QueryDSL을 배웠으니, 더 복잡한 쿼리 최적화 기법을 배웁니다.
 ```
 
 **배울 내용:**
-- DB 인덱스 설계 (Liquibase로 인덱스 추가)
+- DB 인덱스 설계 (dbmate로 인덱스 추가)
 - 쿼리 실행 계획 분석 (EXPLAIN)
 - Spring Cache (@Cacheable, @CacheEvict)
 - 페이징 최적화 (카운트 쿼리 분리)
@@ -207,7 +207,7 @@ ManyToMany 관계를 배워봅니다.
 7. 좋아요 기능
 
 **활용 기술:**
-- 명세 우선 개발 (OpenAPI + Liquibase)
+- 명세 우선 개발 (OpenAPI + dbmate)
 - 전역 예외 처리
 - Bean Validation
 - 트랜잭션 관리
@@ -347,7 +347,7 @@ Docker로 애플리케이션을 배포하고 싶어
 
 ### 5. 명세 우선 개발 유지
 - API 변경 시: `api-spec.yaml` 먼저 수정 → `./gradlew generateApi`
-- DB 변경 시: Liquibase changeset 작성 → `./gradlew bootRun`
+- DB 변경 시: dbmate 마이그레이션 작성 → `dbmate up`
 - 코드를 먼저 수정하지 마세요!
 
 ---
@@ -433,7 +433,7 @@ DB 인덱스와 캐싱으로 쿼리 성능을 최적화하고 싶어
 현재 프로젝트에는 이미 많은 기능이 구현되어 있습니다:
 
 - ✅ **명세 우선 개발**: OpenAPI 명세 → 코드 자동 생성
-- ✅ **DB 스키마 관리**: Liquibase changeset
+- ✅ **DB 스키마 관리**: dbmate 마이그레이션
 - ✅ **전역 예외 처리**: @RestControllerAdvice
 - ✅ **자동 검증**: @Valid + Bean Validation
 - ✅ **트랜잭션 관리**: @Transactional (readOnly 최적화)

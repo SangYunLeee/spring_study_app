@@ -26,7 +26,7 @@ spring:
   jpa:
     hibernate:
       # 테스트 시에는 create-drop 사용 가능 (테스트 후 모든 테이블 삭제)
-      # 하지만 현재는 Liquibase를 사용하므로 validate 유지
+      # 하지만 현재는 dbmate를 사용하므로 validate 유지
       ddl-auto: validate
 
     # 테스트에서는 SQL 로그를 덜 출력 (가독성)

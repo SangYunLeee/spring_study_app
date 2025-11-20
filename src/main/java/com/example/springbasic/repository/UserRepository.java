@@ -19,7 +19,7 @@ import java.util.Optional;
  * - existsById(Long) : 존재 여부
  *
  * DB 명세와 연결:
- * - Liquibase 명세로 생성된 users 테이블
+ * - dbmate 마이그레이션으로 생성된 users 테이블
  * - User Entity(@Entity)가 테이블과 매핑됨
  *
  * Spring Data JPA 쿼리 메서드:
@@ -41,7 +41,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * SELECT * FROM users WHERE email = ?
      *
      * 인덱스 활용:
-     * - 002-add-email-index.yaml에서 생성한 인덱스 사용
+     * - 20250101000002_add_email_index.sql에서 생성한 인덱스 사용
      * - 빠른 검색 성능
      */
     Optional<User> findByEmail(String email);
