@@ -1,7 +1,6 @@
 package com.example.springbasic.model;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -19,14 +18,13 @@ import java.util.Objects;
  * - FetchType.LAZY: 지연 로딩 (성능 최적화)
  * - cascade: 영속성 전이
  * - orphanRemoval: 고아 객체 제거
+ *
+ * 상속:
+ * - BaseEntity: id, createdAt, updatedAt 공통 필드
  */
 @Entity
 @Table(name = "posts")
-public class Post {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Post extends BaseEntity {
 
     @Column(name = "title", nullable = false, length = 200)
     private String title;
@@ -62,12 +60,6 @@ public class Post {
      */
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Comment> comments = new ArrayList<>();
-
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
 
     // ========== JPA 필수: 기본 생성자 ==========
 
@@ -139,31 +131,7 @@ public class Post {
         this.content = content;
     }
 
-    // ========== JPA 생명주기 콜백 ==========
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
-
     // ========== Getter/Setter ==========
-
-    public Long getId() {
-        return id;
-    }
-
-    /**
-     * ID 설정 (테스트 전용)
-     */
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public String getTitle() {
         return title;
@@ -197,14 +165,6 @@ public class Post {
      */
     public List<Comment> getComments() {
         return new ArrayList<>(comments);
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
     }
 
     // ========== Object 메서드 ==========

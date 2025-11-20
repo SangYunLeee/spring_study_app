@@ -1,7 +1,6 @@
 package com.example.springbasic.model;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
 import java.util.Objects;
 
 /**
@@ -15,14 +14,13 @@ import java.util.Objects;
  * - @ManyToOne: Comment → User, Comment → Post (다대일)
  * - FetchType.LAZY: 지연 로딩
  * - 연관관계의 주인: @JoinColumn이 있는 쪽
+ *
+ * 상속:
+ * - BaseEntity: id, createdAt, updatedAt 공통 필드
  */
 @Entity
 @Table(name = "comments")
-public class Comment {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Comment extends BaseEntity {
 
     @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content;
@@ -54,12 +52,6 @@ public class Comment {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "post_id", nullable = false)
     private Post post;
-
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
 
     // ========== JPA 필수: 기본 생성자 ==========
 
@@ -99,31 +91,7 @@ public class Comment {
         this.content = content;
     }
 
-    // ========== JPA 생명주기 콜백 ==========
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
-
     // ========== Getter/Setter ==========
-
-    public Long getId() {
-        return id;
-    }
-
-    /**
-     * ID 설정 (테스트 전용)
-     */
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public String getContent() {
         return content;
@@ -148,14 +116,6 @@ public class Comment {
 
     public void setPost(Post post) {
         this.post = post;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
     }
 
     // ========== Object 메서드 ==========

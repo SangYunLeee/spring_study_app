@@ -1,7 +1,6 @@
 package com.example.springbasic.model;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -17,14 +16,13 @@ import java.util.Objects;
  * 계층 분리:
  * - 도메인 모델 (Service, Repository에서 사용)
  * - API 모델과 분리 (Controller에서 변환)
+ *
+ * 상속:
+ * - BaseEntity: id, createdAt, updatedAt 공통 필드
  */
 @Entity
 @Table(name = "users")
-public class User {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class User extends BaseEntity {
 
     @Column(name = "name", nullable = false, length = 100)
     private String name;
@@ -34,12 +32,6 @@ public class User {
 
     @Column(name = "age", nullable = false)
     private Integer age;
-
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
 
     // ========== 연관관계: Post (작성한 게시글 목록) ==========
 
@@ -116,32 +108,7 @@ public class User {
         }
     }
 
-    // ========== JPA 생명주기 콜백 ==========
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
-
     // ========== Getter/Setter ==========
-
-    public Long getId() {
-        return id;
-    }
-
-    /**
-     * ID 설정 (테스트 전용)
-     * 실제 운영 코드에서는 사용하지 말 것 (DB가 자동 생성)
-     */
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public String getName() {
         return name;
@@ -168,14 +135,6 @@ public class User {
     public void setAge(Integer age) {
         validateAge(age);
         this.age = age;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
     }
 
     /**
