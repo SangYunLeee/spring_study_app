@@ -1,6 +1,8 @@
 package com.example.springbasic.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -71,32 +73,14 @@ public class Post extends BaseEntity {
 
     /**
      * 게시글 생성 (정적 팩토리 메서드)
+     * CreateRequest가 이미 Bean Validation으로 검증됨
      */
-    public static Post create(String title, String content, User author) {
+    public static Post create(CreateRequest request, User author) {
         Post post = new Post();
-        post.title = title;
-        post.content = content;
+        post.title = request.title();
+        post.content = request.content();
         post.author = author;
-        post.validateTitle(title);
-        post.validateContent(content);
         return post;
-    }
-
-    // ========== 유효성 검증 ==========
-
-    private void validateTitle(String title) {
-        if (title == null || title.isBlank()) {
-            throw new IllegalArgumentException("제목은 필수입니다");
-        }
-        if (title.length() > 200) {
-            throw new IllegalArgumentException("제목은 200자 이하여야 합니다");
-        }
-    }
-
-    private void validateContent(String content) {
-        if (content == null || content.isBlank()) {
-            throw new IllegalArgumentException("내용은 필수입니다");
-        }
     }
 
     // ========== 연관관계 편의 메서드 ==========
@@ -124,22 +108,44 @@ public class Post extends BaseEntity {
     /**
      * 게시글 수정
      * null이 아닌 필드만 업데이트
+     * UpdateRequest가 이미 Bean Validation으로 검증됨
      */
     public void update(UpdateRequest request) {
         if (request.title() != null) {
-            validateTitle(request.title());
             this.title = request.title();
         }
         if (request.content() != null) {
-            validateContent(request.content());
             this.content = request.content();
         }
     }
 
     /**
-     * 부분 업데이트를 위한 요청 DTO
+     * 게시글 생성 요청 DTO
+     * Bean Validation으로 형식 검증
      */
-    public record UpdateRequest(String title, String content) {
+    public record CreateRequest(
+            @NotBlank(message = "제목은 필수입니다")
+            @Size(max = 200, message = "제목은 200자 이하여야 합니다")
+            String title,
+
+            @NotBlank(message = "내용은 필수입니다")
+            String content
+    ) {
+        public static CreateRequest of(String title, String content) {
+            return new CreateRequest(title, content);
+        }
+    }
+
+    /**
+     * 게시글 수정 요청 DTO
+     * null 허용 (부분 업데이트)
+     */
+    public record UpdateRequest(
+            @Size(max = 200, message = "제목은 200자 이하여야 합니다")
+            String title,
+
+            String content
+    ) {
         public static UpdateRequest of(String title, String content) {
             return new UpdateRequest(title, content);
         }

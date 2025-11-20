@@ -63,9 +63,9 @@ class NPlusOneProblemTest {
         user2 = userRepository.save(User.createNew("김철수", "kim@example.com", 30));
 
         // 게시글 생성
-        post1 = Post.create("첫 번째 게시글", "내용 1", user1);
-        post2 = Post.create("두 번째 게시글", "내용 2", user1);
-        post3 = Post.create("세 번째 게시글", "내용 3", user2);
+        post1 = Post.create(Post.CreateRequest.of("첫 번째 게시글", "내용 1"), user1);
+        post2 = Post.create(Post.CreateRequest.of("두 번째 게시글", "내용 2"), user1);
+        post3 = Post.create(Post.CreateRequest.of("세 번째 게시글", "내용 3"), user2);
 
         postRepository.save(post1);
         postRepository.save(post2);
