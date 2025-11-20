@@ -103,13 +103,13 @@ class NPlusOneProblemTest {
 
     @Test
     @Transactional
-    @DisplayName("N+1 문제 해결 - Fetch Join 사용")
+    @DisplayName("N+1 문제 해결 - Fetch Join 사용 (QueryDSL)")
     void nPlusOneProblem_Solved_WithFetchJoin() {
-        System.out.println("\n========== Fetch Join 시작 ==========");
+        System.out.println("\n========== Fetch Join 시작 (QueryDSL) ==========");
         System.out.println("예상: 1개의 JOIN 쿼리만 발생!");
 
-        // When: Fetch Join으로 조회
-        List<Post> posts = postRepository.findAllWithAuthor();
+        // When: Fetch Join으로 조회 (QueryDSL)
+        List<Post> posts = postRepository.findAllWithAuthorUsingQueryDsl();
 
         System.out.println("\n========== 데이터 접근 ==========");
         System.out.println("이미 author가 로드되어 있어 추가 쿼리 없음!");
@@ -169,13 +169,13 @@ class NPlusOneProblemTest {
 
     @Test
     @Transactional
-    @DisplayName("다중 Fetch Join - 게시글 + 작성자 + 댓글")
+    @DisplayName("다중 Fetch Join - 게시글 + 작성자 + 댓글 (QueryDSL)")
     void multipleFetchJoin() {
-        System.out.println("\n========== 다중 Fetch Join ==========");
+        System.out.println("\n========== 다중 Fetch Join (QueryDSL) ==========");
         System.out.println("게시글 + 작성자 + 모든 댓글을 1개 쿼리로 조회!");
 
-        // When: 게시글 + 작성자 + 댓글 모두 조회
-        Post post = postRepository.findByIdWithAuthorAndComments(post1.getId());
+        // When: 게시글 + 작성자 + 댓글 모두 조회 (QueryDSL)
+        Post post = postRepository.findByIdWithAuthorAndCommentsUsingQueryDsl(post1.getId());
 
         System.out.println("\n========== 데이터 접근 ==========");
 
