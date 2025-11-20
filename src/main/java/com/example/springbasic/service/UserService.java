@@ -148,8 +148,8 @@ public class UserService {
             });
         }
 
-        // 3. 필드 업데이트 (비즈니스 메서드 사용)
-        existingUser.update(name, email, age);
+        // 3. 필드 업데이트 (전체 필드 업데이트)
+        existingUser.update(User.UpdateRequest.of(name, email, age));
 
         // 4. 저장 (JPA가 변경 감지하여 자동 UPDATE)
         return userRepository.save(existingUser);

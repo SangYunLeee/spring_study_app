@@ -85,10 +85,22 @@ public class Comment extends BaseEntity {
 
     /**
      * 댓글 수정
+     * null이 아닌 필드만 업데이트
      */
-    public void update(String content) {
-        validateContent(content);
-        this.content = content;
+    public void update(UpdateRequest request) {
+        if (request.content() != null) {
+            validateContent(request.content());
+            this.content = request.content();
+        }
+    }
+
+    /**
+     * 부분 업데이트를 위한 요청 DTO
+     */
+    public record UpdateRequest(String content) {
+        public static UpdateRequest of(String content) {
+            return new UpdateRequest(content);
+        }
     }
 
     // ========== Getter ==========

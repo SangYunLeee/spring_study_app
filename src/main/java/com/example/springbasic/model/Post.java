@@ -123,12 +123,26 @@ public class Post extends BaseEntity {
 
     /**
      * 게시글 수정
+     * null이 아닌 필드만 업데이트
      */
-    public void update(String title, String content) {
-        validateTitle(title);
-        validateContent(content);
-        this.title = title;
-        this.content = content;
+    public void update(UpdateRequest request) {
+        if (request.title() != null) {
+            validateTitle(request.title());
+            this.title = request.title();
+        }
+        if (request.content() != null) {
+            validateContent(request.content());
+            this.content = request.content();
+        }
+    }
+
+    /**
+     * 부분 업데이트를 위한 요청 DTO
+     */
+    public record UpdateRequest(String title, String content) {
+        public static UpdateRequest of(String title, String content) {
+            return new UpdateRequest(title, content);
+        }
     }
 
     // ========== Getter ==========

@@ -111,23 +111,7 @@ public class User extends BaseEntity {
     // ========== 비즈니스 메서드 ==========
 
     /**
-     * 사용자 정보 수정 (전체)
-     *
-     * @param name 새 이름
-     * @param email 새 이메일
-     * @param age 새 나이
-     */
-    public void update(String name, String email, Integer age) {
-        validateName(name);
-        validateEmail(email);
-        validateAge(age);
-        this.name = name;
-        this.email = email;
-        this.age = age;
-    }
-
-    /**
-     * 사용자 정보 수정 (부분)
+     * 사용자 정보 수정
      * null이 아닌 필드만 업데이트
      */
     public void update(UpdateRequest request) {
@@ -146,7 +130,7 @@ public class User extends BaseEntity {
     }
 
     /**
-     * 부분 업데이트를 위한 요청 DTO
+     * 업데이트를 위한 요청 DTO
      */
     public record UpdateRequest(String name, String email, Integer age) {
         public static UpdateRequest of(String name, String email, Integer age) {
