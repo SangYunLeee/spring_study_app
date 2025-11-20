@@ -37,11 +37,11 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
     }
 
     /**
-     * QueryDSL: 게시글별 댓글 조회 (Fetch Join)
+     * 게시글별 댓글 조회 (Fetch Join - Author + Post)
      *
-     * 비교:
-     * - JPQL: 문자열 기반, 런타임 검증
-     * - QueryDSL: Java 코드, 컴파일 타임 검증
+     * N+1 문제 해결:
+     * - 1개 쿼리로 Comment + Author + Post 조회
+     * - 타입 안전: 컴파일 타임 검증
      */
     @Override
     public List<Comment> findByPostIdWithAuthorAndPostUsingQueryDsl(Long postId) {
@@ -53,17 +53,37 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
                 .selectFrom(comment)
                 .join(comment.author, user).fetchJoin()  // Fetch Join
                 .join(comment.post, post).fetchJoin()    // Fetch Join
-                .where(comment.post.id.eq(postId))       // WHERE 조건 (타입 안전!)
+                .where(comment.post.id.eq(postId))       // WHERE 조건
                 .orderBy(comment.createdAt.asc())        // ORDER BY
-                .fetch();                                 // 실행
+                .fetch();
     }
 
     /**
-     * QueryDSL: 최신 댓글 조회 (Fetch Join + Pageable)
+     * 게시글별 댓글 조회 (Fetch Join - Author만)
      *
-     * Pageable 적용:
-     * - offset(): 페이지 시작 위치
-     * - limit(): 페이지 크기
+     * 경량 쿼리:
+     * - Post는 Fetch Join 안 함
+     * - Author만 필요한 경우 사용
+     */
+    @Override
+    public List<Comment> findByPostIdWithAuthorUsingQueryDsl(Long postId) {
+        QComment comment = QComment.comment;
+        QUser user = QUser.user;
+
+        return queryFactory
+                .selectFrom(comment)
+                .join(comment.author, user).fetchJoin()  // Author만 Fetch Join
+                .where(comment.post.id.eq(postId))       // WHERE 조건
+                .orderBy(comment.createdAt.asc())        // ORDER BY
+                .fetch();
+    }
+
+    /**
+     * 최신 댓글 조회 (Fetch Join + Pageable)
+     *
+     * 페이징 지원:
+     * - offset(): 시작 위치
+     * - limit(): 개수
      */
     @Override
     public List<Comment> findRecentCommentsWithDetailsUsingQueryDsl(Pageable pageable) {
@@ -76,22 +96,17 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
                 .join(comment.author, user).fetchJoin()
                 .join(comment.post, post).fetchJoin()
                 .orderBy(comment.createdAt.desc())
-                .offset(pageable.getOffset())     // 페이징: 시작 위치
-                .limit(pageable.getPageSize())    // 페이징: 개수
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
                 .fetch();
     }
 
     /**
-     * QueryDSL: 동적 검색
+     * 동적 검색
      *
-     * BooleanBuilder:
-     * - 조건을 동적으로 추가
-     * - null 체크 후 조건 추가
-     * - 여러 조건 AND/OR 조합
-     *
-     * 예시:
-     * - content가 null → 조건 추가 안함
-     * - content가 "검색어" → LIKE 검색 추가
+     * BooleanBuilder로 조건 동적 조합:
+     * - null인 파라미터는 조건에서 제외
+     * - 여러 조건을 AND로 결합
      */
     @Override
     public List<Comment> searchComments(String content, Long postId, Long authorId) {
@@ -99,12 +114,11 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
         QUser user = QUser.user;
         QPost post = QPost.post;
 
-        // 동적 조건 빌더
         BooleanBuilder builder = new BooleanBuilder();
 
         // 내용 검색 (옵션)
         if (content != null && !content.isBlank()) {
-            builder.and(comment.content.contains(content));  // LIKE '%검색어%'
+            builder.and(comment.content.contains(content));
         }
 
         // 게시글 ID 필터 (옵션)
@@ -121,31 +135,8 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
                 .selectFrom(comment)
                 .join(comment.author, user).fetchJoin()
                 .join(comment.post, post).fetchJoin()
-                .where(builder)  // 동적 조건 적용
+                .where(builder)
                 .orderBy(comment.createdAt.desc())
-                .fetch();
-    }
-
-    /**
-     * QueryDSL: 게시글 ID로 댓글 조회 (Fetch Join - 작성자만)
-     *
-     * JPQL 대체:
-     * - @Query("SELECT c FROM Comment c JOIN FETCH c.author WHERE c.post.id = :postId ORDER BY c.createdAt ASC")
-     *
-     * 차이점:
-     * - Post는 Fetch Join 안 함 (필요 없는 경우)
-     * - Author만 Fetch Join
-     */
-    @Override
-    public List<Comment> findByPostIdWithAuthorUsingQueryDsl(Long postId) {
-        QComment comment = QComment.comment;
-        QUser user = QUser.user;
-
-        return queryFactory
-                .selectFrom(comment)
-                .join(comment.author, user).fetchJoin()  // Author만 Fetch Join
-                .where(comment.post.id.eq(postId))       // WHERE 조건
-                .orderBy(comment.createdAt.asc())        // ORDER BY
                 .fetch();
     }
 }
