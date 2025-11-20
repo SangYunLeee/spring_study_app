@@ -131,31 +131,26 @@ public class Post extends BaseEntity {
         this.content = content;
     }
 
-    // ========== Getter/Setter ==========
+    // ========== Getter ==========
 
     public String getTitle() {
         return title;
-    }
-
-    public void setTitle(String title) {
-        validateTitle(title);
-        this.title = title;
     }
 
     public String getContent() {
         return content;
     }
 
-    public void setContent(String content) {
-        validateContent(content);
-        this.content = content;
-    }
-
     public User getAuthor() {
         return author;
     }
 
-    public void setAuthor(User author) {
+    /**
+     * 연관관계 설정용 (package-private)
+     * - 외부에서 직접 호출 금지
+     * - addPost/removePost 메서드를 통해서만 사용
+     */
+    void setAuthor(User author) {
         this.author = author;
     }
 

@@ -148,10 +148,8 @@ public class UserService {
             });
         }
 
-        // 3. 필드 업데이트 (JPA Entity는 setter 사용)
-        existingUser.setName(name);
-        existingUser.setEmail(email);
-        existingUser.setAge(age);
+        // 3. 필드 업데이트 (비즈니스 메서드 사용)
+        existingUser.update(name, email, age);
 
         // 4. 저장 (JPA가 변경 감지하여 자동 UPDATE)
         return userRepository.save(existingUser);
@@ -176,18 +174,10 @@ public class UserService {
             });
         }
 
-        // 3. 변경된 필드만 업데이트 (null이 아닌 것만)
-        if (name != null) {
-            existingUser.setName(name);
-        }
-        if (email != null) {
-            existingUser.setEmail(email);
-        }
-        if (age != null) {
-            existingUser.setAge(age);
-        }
+        // 3. 변경된 필드만 업데이트 (null이 아닌 필드만 업데이트)
+        existingUser.update(User.UpdateRequest.of(name, email, age));
 
-        // 4. 저장 (JPA가 변경 감지하여 자동 UPDATE)
+        // 4. 저장 (변경된 필드가 있을 경우에만 UPDATE 쿼리 발생)
         return userRepository.save(existingUser);
     }
 

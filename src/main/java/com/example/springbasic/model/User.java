@@ -108,33 +108,64 @@ public class User extends BaseEntity {
         }
     }
 
-    // ========== Getter/Setter ==========
+    // ========== 비즈니스 메서드 ==========
+
+    /**
+     * 사용자 정보 수정 (전체)
+     *
+     * @param name 새 이름
+     * @param email 새 이메일
+     * @param age 새 나이
+     */
+    public void update(String name, String email, Integer age) {
+        validateName(name);
+        validateEmail(email);
+        validateAge(age);
+        this.name = name;
+        this.email = email;
+        this.age = age;
+    }
+
+    /**
+     * 사용자 정보 수정 (부분)
+     * null이 아닌 필드만 업데이트
+     */
+    public void update(UpdateRequest request) {
+        if (request.name() != null) {
+            validateName(request.name());
+            this.name = request.name();
+        }
+        if (request.email() != null) {
+            validateEmail(request.email());
+            this.email = request.email();
+        }
+        if (request.age() != null) {
+            validateAge(request.age());
+            this.age = request.age();
+        }
+    }
+
+    /**
+     * 부분 업데이트를 위한 요청 DTO
+     */
+    public record UpdateRequest(String name, String email, Integer age) {
+        public static UpdateRequest of(String name, String email, Integer age) {
+            return new UpdateRequest(name, email, age);
+        }
+    }
+
+    // ========== Getter ==========
 
     public String getName() {
         return name;
-    }
-
-    public void setName(String name) {
-        validateName(name);
-        this.name = name;
     }
 
     public String getEmail() {
         return email;
     }
 
-    public void setEmail(String email) {
-        validateEmail(email);
-        this.email = email;
-    }
-
     public Integer getAge() {
         return age;
-    }
-
-    public void setAge(Integer age) {
-        validateAge(age);
-        this.age = age;
     }
 
     /**

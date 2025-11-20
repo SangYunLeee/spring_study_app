@@ -91,30 +91,35 @@ public class Comment extends BaseEntity {
         this.content = content;
     }
 
-    // ========== Getter/Setter ==========
+    // ========== Getter ==========
 
     public String getContent() {
         return content;
-    }
-
-    public void setContent(String content) {
-        validateContent(content);
-        this.content = content;
     }
 
     public User getAuthor() {
         return author;
     }
 
-    public void setAuthor(User author) {
-        this.author = author;
-    }
-
     public Post getPost() {
         return post;
     }
 
-    public void setPost(Post post) {
+    /**
+     * 연관관계 설정용 (package-private)
+     * - 외부에서 직접 호출 금지
+     * - addComment/removeComment 메서드를 통해서만 사용
+     */
+    void setAuthor(User author) {
+        this.author = author;
+    }
+
+    /**
+     * 연관관계 설정용 (package-private)
+     * - 외부에서 직접 호출 금지
+     * - addComment/removeComment 메서드를 통해서만 사용
+     */
+    void setPost(Post post) {
         this.post = post;
     }
 
